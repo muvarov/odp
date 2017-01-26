@@ -130,10 +130,12 @@ static int read_configfile(void)
 	if (config_filename) {
 		ODP_DBG("Reading configuration file: %s\n", config_filename);
 		if (!config_read_file(cf, config_filename)) {
+#if 0
 			ODP_ERR("%s:%d - %s\n",
 				config_error_file(cf),
 				config_error_line(cf),
 				config_error_text(cf));
+#endif
 			config_destroy(cf);
 			return(-1);
 		}
