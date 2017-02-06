@@ -7,6 +7,8 @@
 # pushing to github/coverity_scan will also launch a static analysis
 # See https://scan.coverity.com/travis_ci
 
+
+
 language: c
 sudo: required
 env:
