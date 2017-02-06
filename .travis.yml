@@ -91,6 +91,11 @@ before_install:
         - popd
 
 script:
+        - echo $TRAVIS_COMMIT_RANGE
+        - ODP_PACHES=`echo $TRAVIS_COMMIT_RANGE | sed 's/\.//'`
+        - git format-patch $ODP_PACHES
+        - perl ./scripts/checkpatch.pl *.patch
+
         - ./bootstrap
         - ./configure
         - make doxygen-doc
