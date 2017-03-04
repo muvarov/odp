@@ -16,14 +16,17 @@
 #include <odp/api/plat/packet_types.h>
 #include <odp/api/hints.h>
 
+/** @internal Packet field accessor */
+#define _odp_pkt_get(pkt, cast, field) \
+	(*(cast *)(uintptr_t)((uint8_t *)pkt + _odp_packet_inline.field))
+
 /** @internal Inline function offsets */
 extern const _odp_packet_inline_offset_t _odp_packet_inline;
 
 /** @internal Inline function @param pkt @return */
 static inline uint64_t _odp_packet_input_flags(odp_packet_t pkt)
 {
-	return *(uint64_t *)(uintptr_t)((uint8_t *)pkt +
-	       _odp_packet_inline.input_flags);
+	return _odp_pkt_get(pkt, uint64_t, input_flags);
 }
 
 /** @internal Inline function @param pkt @return */
