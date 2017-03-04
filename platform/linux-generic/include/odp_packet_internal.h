@@ -119,7 +119,7 @@ typedef struct {
  * packet_init(). Because of this any new fields added must be reviewed for
  * initialization requirements.
  */
-typedef struct {
+typedef struct odp_packet_hdr_t {
 	/* common buffer header */
 	odp_buffer_hdr_t buf_hdr;
 
@@ -134,6 +134,13 @@ typedef struct {
 	uint32_t frame_len;
 	uint32_t headroom;
 	uint32_t tailroom;
+
+	/* Fields used to support packet references */
+	uint32_t unshared_len;
+	struct odp_packet_hdr_t *ref_hdr;
+	uint32_t ref_offset;
+	uint32_t ref_len;
+	odp_atomic_u32_t ref_count;
 
 	/*
 	 * Members below are not initialized by packet_init()
