@@ -184,15 +184,6 @@ static inline void copy_packet_cls_metadata(odp_packet_hdr_t *src_hdr,
 	dst_hdr->op_result = src_hdr->op_result;
 }
 
-static inline void pull_tail(odp_packet_hdr_t *pkt_hdr, uint32_t len)
-{
-	int last = pkt_hdr->buf_hdr.segcount - 1;
-
-	pkt_hdr->tailroom  += len;
-	pkt_hdr->frame_len -= len;
-	pkt_hdr->buf_hdr.seg[last].len -= len;
-}
-
 static inline uint32_t packet_len(odp_packet_hdr_t *pkt_hdr)
 {
 	return pkt_hdr->frame_len;

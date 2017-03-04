@@ -149,6 +149,15 @@ static inline void push_tail(odp_packet_hdr_t *pkt_hdr, uint32_t len)
 	pkt_hdr->buf_hdr.seg[last].len += len;
 }
 
+static inline void pull_tail(odp_packet_hdr_t *pkt_hdr, uint32_t len)
+{
+	int last = pkt_hdr->buf_hdr.segcount - 1;
+
+	pkt_hdr->tailroom  += len;
+	pkt_hdr->frame_len -= len;
+	pkt_hdr->buf_hdr.seg[last].len -= len;
+}
+
 /* Copy all metadata for segmentation modification. Segment data and lengths
  * are not copied. */
 static inline void packet_seg_copy_md(odp_packet_hdr_t *dst,
