@@ -47,19 +47,6 @@ typedef struct pool_local_t {
 pool_table_t *pool_tbl;
 static __thread pool_local_t local;
 
-static inline odp_pool_t pool_index_to_handle(uint32_t pool_idx)
-{
-	return _odp_cast_scalar(odp_pool_t, pool_idx);
-}
-
-static inline uint32_t pool_id_from_buf(odp_buffer_t buf)
-{
-	odp_buffer_bits_t handle;
-
-	handle.handle = buf;
-	return handle.pool_id;
-}
-
 int odp_pool_init_global(void)
 {
 	uint32_t i;
@@ -672,8 +659,8 @@ int buffer_alloc_multi(pool_t *pool, odp_buffer_t buf[],
 	return num_ch + num_deq;
 }
 
-static inline void buffer_free_to_pool(uint32_t pool_id,
-				       const odp_buffer_t buf[], int num)
+void buffer_free_to_pool(uint32_t pool_id,
+			 const odp_buffer_t buf[], int num)
 {
 	pool_t *pool;
 	int i;
@@ -731,36 +718,6 @@ static inline void buffer_free_to_pool(uint32_t pool_id,
 		cache->buf[cache_num + i] = buf[i];
 
 	cache->num = cache_num + num;
-}
-
-void buffer_free_multi(const odp_buffer_t buf[], int num_total)
-{
-	uint32_t pool_id;
-	int num;
-	int i;
-	int first = 0;
-
-	while (1) {
-		num = 1;
-		i   = 1;
-		pool_id = pool_id_from_buf(buf[first]);
-
-		/* 'num' buffers are from the same pool */
-		if (num_total > 1) {
-			for (i = first; i < num_total; i++)
-				if (pool_id != pool_id_from_buf(buf[i]))
-					break;
-
-			num = i - first;
-		}
-
-		buffer_free_to_pool(pool_id, &buf[first], num);
-
-		if (i == num_total)
-			return;
-
-		first = i;
-	}
 }
 
 odp_buffer_t odp_buffer_alloc(odp_pool_t pool_hdl)

@@ -122,9 +122,40 @@ static inline odp_buffer_hdr_t *buf_hdl_to_hdr(odp_buffer_t buf)
 	return pool_buf_hdl_to_hdr(pool, buf);
 }
 
+static inline odp_pool_t pool_index_to_handle(uint32_t pool_idx)
+{
+	return _odp_cast_scalar(odp_pool_t, pool_idx);
+}
+
+static inline uint32_t pool_id_from_buf(odp_buffer_t buf)
+{
+	odp_buffer_bits_t handle;
+
+	handle.handle = buf;
+	return handle.pool_id;
+}
+
 int buffer_alloc_multi(pool_t *pool, odp_buffer_t buf[],
 		       odp_buffer_hdr_t *buf_hdr[], int num);
-void buffer_free_multi(const odp_buffer_t buf[], int num_free);
+void buffer_free_to_pool(uint32_t pool_id, const odp_buffer_t buf[], int num);
+
+static inline void buffer_free_multi(const odp_buffer_t buf[], int num)
+{
+	uint32_t next_pool, pool_id = pool_id_from_buf(buf[0]);
+	int i, first = 0;
+
+	for (i = 1; i < num; i++) {
+		next_pool = pool_id_from_buf(buf[i]);
+
+		if (odp_unlikely(next_pool != pool_id)) {
+			buffer_free_to_pool(pool_id, &buf[first], i - first);
+			first = i;
+			pool_id = next_pool;
+		}
+	}
+
+	buffer_free_to_pool(pool_id, &buf[first], num - first);
+}
 
 #ifdef __cplusplus
 }
