@@ -19,6 +19,7 @@ extern "C" {
 
 #include <odp/api/align.h>
 #include <odp/api/debug.h>
+#include <odp_debug_internal.h>
 #include <odp_buffer_internal.h>
 #include <odp_pool_internal.h>
 #include <odp_buffer_inlines.h>
@@ -217,7 +218,10 @@ static inline void packet_ref_count_set(odp_packet_hdr_t *pkt_hdr, uint32_t n)
 
 static inline void packet_set_len(odp_packet_hdr_t *pkt_hdr, uint32_t len)
 {
+	ODP_ASSERT(packet_ref_count(pkt_hdr) == 1);
+
 	pkt_hdr->frame_len = len;
+	pkt_hdr->unshared_len = len;
 }
 
 static inline int packet_parse_l2_not_done(packet_parser_t *prs)
