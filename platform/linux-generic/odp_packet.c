@@ -711,6 +711,8 @@ static inline void packet_free(odp_packet_hdr_t *pkt_hdr)
 
 void odp_packet_free(odp_packet_t pkt)
 {
+	ODP_DBG("odp_packet_free %"PRIu64" \n", odp_packet_to_u64(pkt));  
+
 	packet_free(packet_hdr(pkt));
 }
 
