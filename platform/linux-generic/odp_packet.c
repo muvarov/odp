@@ -691,11 +691,21 @@ static inline void packet_free(odp_packet_hdr_t *pkt_hdr)
 	odp_packet_hdr_t *ref_hdr;
 	uint32_t ref_count;
 	int num_seg;
+	int i = -1;
+
 
 	do {
+		i++;
 		ref_count = packet_ref_count(pkt_hdr);
 		num_seg = pkt_hdr->buf_hdr.segcount;
 		ref_hdr = pkt_hdr->ref_hdr;
+
+		if (ref_count == 0) { 
+			ODP_DBG("ref is null! %d\n", i);
+			break;
+		}
+
+
 		ODP_ASSERT(ref_count >= 1);
 
 		if (odp_likely((CONFIG_PACKET_MAX_SEGS == 1 || num_seg == 1) &&
@@ -707,6 +717,10 @@ static inline void packet_free(odp_packet_hdr_t *pkt_hdr)
 
 		pkt_hdr = ref_hdr;
 	} while (pkt_hdr);
+
+
+	ODP_DBG("exit i is! %d\n", i);
+
 }
 
 void odp_packet_free(odp_packet_t pkt)
