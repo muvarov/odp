@@ -696,6 +696,10 @@ static inline void packet_free(odp_packet_hdr_t *pkt_hdr)
 		ref_count = packet_ref_count(pkt_hdr);
 		num_seg = pkt_hdr->buf_hdr.segcount;
 		ref_hdr = pkt_hdr->ref_hdr;
+
+		if (ref_count == 0)
+			break;
+
 		ODP_ASSERT(ref_count >= 1);
 
 		if (odp_likely((CONFIG_PACKET_MAX_SEGS == 1 || num_seg == 1) &&
@@ -709,9 +713,21 @@ static inline void packet_free(odp_packet_hdr_t *pkt_hdr)
 	} while (pkt_hdr);
 }
 
+static inline void packet_free_debug(odp_packet_t pkt, odp_packet_hdr_t *pkt_hdr)
+{
+
+		int ref_count = packet_ref_count(pkt_hdr);
+		if (ref_count == 0) {
+			ODP_DBG("odp_packet_free %"PRIu64" \n", odp_packet_to_u64(pkt));  
+
+		packet_free(pkt_hdr);
+}
+
+
 void odp_packet_free(odp_packet_t pkt)
 {
-	packet_free(packet_hdr(pkt));
+	//ODP_DBG("odp_packet_free %"PRIu64" \n", odp_packet_to_u64(pkt));  
+	packet_free_debug(pkt, packet_hdr(pkt));
 }
 
 void odp_packet_free_multi(const odp_packet_t pkt[], int num)

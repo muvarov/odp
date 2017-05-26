@@ -162,6 +162,8 @@ static int ipc_second_process(int master_pid)
 			pkt_head_t head;
 			size_t off;
 
+			EXAMPLE_DBG("alloc pkt  %"PRIu64" \n", odp_packet_to_u64(alloc_pkt));
+
 			odp_packet_l4_offset_set(alloc_pkt, 30);
 
 			head.magic = TEST_ALLOC_MAGIC;
