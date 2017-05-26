@@ -22,7 +22,7 @@ static int ipc_second_process(int master_pid)
 	odp_pool_param_t params;
 	odp_pool_t pool;
 	odp_packet_t pkt_tbl[MAX_PKT_BURST];
-	odp_packet_t alloc_pkt;
+	//odp_packet_t alloc_pkt;
 	int pkts;
 	int ret;
 	int i;
@@ -155,7 +155,7 @@ static int ipc_second_process(int master_pid)
 
 		stat_pkts += ret;
 
-#if 1
+#if 0
 		/* alloc packet from local pool, set magic to ALLOC_MAGIC,
 		 * and send it.*/
 		alloc_pkt = odp_packet_alloc(pool, SHM_PKT_POOL_BUF_SIZE);
