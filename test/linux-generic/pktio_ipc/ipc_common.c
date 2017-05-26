@@ -23,7 +23,7 @@ int ipc_odp_packet_send_or_free(odp_pktio_t pktio,
 	int i;
 
 	start_time = odp_time_local();
-	wait = odp_time_local_from_ns(60 * ODP_TIME_SEC_IN_NS);
+	wait = odp_time_local_from_ns(ODP_TIME_SEC_IN_NS);
 	end_time = odp_time_sum(start_time, wait);
 
 	if (odp_pktout_queue(pktio, &pktout, 1) != 1) {
