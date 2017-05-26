@@ -256,7 +256,7 @@ static inline uint32_t packet_ref_count(odp_packet_hdr_t *pkt_hdr)
 	 * is used to bypass atomic operations if ref_count == 1 for
 	 * performance reasons.
 	 */
-	return pkt_hdr->ref_count.v;
+	return odp_atomic_load_u32(&pkt_hdr->ref_count);
 }
 
 static inline void packet_ref_count_set(odp_packet_hdr_t *pkt_hdr, uint32_t n)
@@ -266,7 +266,7 @@ static inline void packet_ref_count_set(odp_packet_hdr_t *pkt_hdr, uint32_t n)
 	 * a controlled breach of the atomic type here. This saves
 	 * over 10% of the pathlength in routines like packet_alloc().
 	 */
-	pkt_hdr->ref_count.v = n;
+	odp_atomic_init_u32(&pkt_hdr->ref_count,  n);
 }
 
 static inline void packet_set_len(odp_packet_hdr_t *pkt_hdr, uint32_t len)
