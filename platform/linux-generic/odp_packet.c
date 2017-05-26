@@ -713,12 +713,13 @@ static inline void packet_free(odp_packet_hdr_t *pkt_hdr)
 	} while (pkt_hdr);
 }
 
-static inline void packet_free_debug(odp_packet_t pkt, odp_packet_hdr_t *pkt_hdr)
+static inline void packet_free_debug(odp_packet_t pkt ODP_UNUSED, odp_packet_hdr_t *pkt_hdr)
 {
 
-		int ref_count = packet_ref_count(pkt_hdr);
-		if (ref_count == 0) {
-			ODP_DBG("odp_packet_free %"PRIu64" \n", odp_packet_to_u64(pkt));  
+		uint32_t ref_count = packet_ref_count(pkt_hdr);
+		static int num = 0;
+		if (ref_count == 0)
+			ODP_DBG("double free odp_packet_free %"PRIu64" %d\n", odp_packet_to_u64(pkt), num++);  
 
 		packet_free(pkt_hdr);
 }
