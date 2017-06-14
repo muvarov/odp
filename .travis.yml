@@ -111,6 +111,8 @@ script:
         - ./configure --prefix=$HOME/odp-install  --enable-test-cpp --enable-test-vald --enable-test-helper --enable-test-perf --enable-user-guides --enable-test-perf-proc --enable-test-example --with-dpdk-path=`pwd`/dpdk/${TARGET} --with-netmap-path=`pwd`/netmap $CONF
         - make -j $(nproc)
         - sudo LD_LIBRARY_PATH="/usr/local/lib:$LD_LIBRARY_PATH" make check
+        - find . -name 'test-suite.log' -execdir grep -il "FAILED" {} \; -exec echo {} \; -exec cat {} \;
+        - cat test/common_plat/performance/test-suite.log
         - make install
 
         - echo "Checking linking and run from install..."
