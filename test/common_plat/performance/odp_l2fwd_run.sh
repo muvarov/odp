@@ -96,7 +96,7 @@ run_l2fwd()
 		ret=1
 	elif [ $ret -eq 0 ]; then
 		PASS_PPS=5000
-		if [ "${TEST}" = "coverage" ]
+		if [ "${TEST}" = "coverage" ]; then
 			PASS_PPS=10
 		fi
 		MAX_PPS=$(awk '/TEST RESULT/ {print $3}' $LOG)
