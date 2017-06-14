@@ -8,6 +8,7 @@ AM_CFLAGS +=  -I$(srcdir)/include
 AM_CFLAGS +=  -I$(top_srcdir)/include
 AM_CFLAGS +=  -I$(top_srcdir)/include/odp/arch/@ARCH_ABI@
 AM_CFLAGS +=  -I$(top_builddir)/include
+AM_CFLAGS +=  -I$(top_srcdir)/arch/@ARCH_DIR@
 AM_CFLAGS +=  -Iinclude
 AM_CFLAGS +=  -DSYSCONFDIR=\"@sysconfdir@\"
 AM_CFLAGS +=  -D_ODP_PKTIO_IPC
@@ -183,6 +184,7 @@ noinst_HEADERS = \
 		  ${srcdir}/include/protocols/ipsec.h \
 		  ${srcdir}/include/protocols/tcp.h \
 		  ${srcdir}/include/protocols/udp.h \
+		  ${srcdir}/arch/@ARCH_DIR@/odp_cpu.h \
 		  ${srcdir}/Makefile.inc
 
 __LIB__libodp_linux_la_SOURCES = \
