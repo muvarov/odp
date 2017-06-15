@@ -70,8 +70,7 @@ install:
         - sudo apt-get -qq update
         - sudo apt-get install linux-headers-`uname -r`
         - sudo pip install coverage
-        - gem install asciidoctor
-        - PATH=${PATH//:\.\/node_modules\/\.bin/}
+        - sudo apt-get install asciidoctor
 
 #       Install cunit for the validation tests because distro version is too old and fails C99 compile
         - sudo apt-get remove libcunit1-dev libcunit1
