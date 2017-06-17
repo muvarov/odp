@@ -146,6 +146,7 @@ typedef union {
 
 		uint64_t color:2;     /**< Packet color for traffic mgmt */
 		uint64_t nodrop:1;    /**< Drop eligibility status */
+		uint64_t freed:1;     /**< Packet has been freed */
 	};
 
 } _odp_packet_input_flags_t;

@@ -566,12 +566,25 @@ int odp_packet_alloc_multi(odp_pool_t pool_hdl, uint32_t len,
 	return num;
 }
 
+uint32_t fcount = 0;
+uint32_t gcount = 0;
+
 void odp_packet_free(odp_packet_t pkt)
 {
 	odp_packet_hdr_t *pkt_hdr = packet_hdr(pkt);
 	odp_buffer_t hdl = buffer_handle(pkt_hdr);
 
 	int num_seg = pkt_hdr->buf_hdr.segcount;
+
+	if (pkt_hdr->p.input_flags.freed &&
+	    (fcount <= 10 || fcount % 1000 == 0)) {
+		fcount++;
+		printf("f=%d, g=%d: Attempting to free pkt %p that is already freed\n",
+		       fcount, gcount, pkt_hdr);
+	} else {
+		gcount++;
+		pkt_hdr->p.input_flags.freed = 1;
+	}
 
 	if (odp_likely(CONFIG_PACKET_MAX_SEGS == 1 || num_seg == 1))
 		buffer_free_multi(&hdl, 1);
