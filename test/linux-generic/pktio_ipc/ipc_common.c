@@ -23,7 +23,7 @@ int ipc_odp_packet_send_or_free(odp_pktio_t pktio,
 	int i;
 
 	start_time = odp_time_local();
-	wait = odp_time_local_from_ns(ODP_TIME_SEC_IN_NS);
+	wait = odp_time_local_from_ns(20 * ODP_TIME_SEC_IN_NS);
 	end_time = odp_time_sum(start_time, wait);
 
 	if (odp_pktout_queue(pktio, &pktout, 1) != 1) {
@@ -32,9 +32,16 @@ int ipc_odp_packet_send_or_free(odp_pktio_t pktio,
 	}
 
 	while (sent != num) {
+		sleep(1);
 		ret = odp_pktout_send(pktout, &pkt_tbl[sent], num - sent);
+		if (ret != num)
+			printf("%s()%d bug here!!\n", __func__, __LINE__);
+
+		if (ret == 0)
+			printf("%s()%d bug here!!\n", __func__, __LINE__);
+
 		if (ret < 0) {
-			EXAMPLE_ERR("odp_pktout_send return %d\n", ret);
+			printf("odp_pktout_send return %d\n", ret);
 			for (i = sent; i < num; i++)
 				odp_packet_free(pkt_tbl[i]);
 			return -1;
@@ -45,7 +52,7 @@ int ipc_odp_packet_send_or_free(odp_pktio_t pktio,
 		if (odp_time_cmp(end_time, odp_time_local()) < 0) {
 			for (i = sent; i < num; i++)
 				odp_packet_free(pkt_tbl[i]);
-			EXAMPLE_ERR("Send Timeout!\n");
+			printf("Send Timeout!\n");
 			return -1;
 		}
 	}

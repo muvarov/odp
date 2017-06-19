@@ -490,8 +490,10 @@ static inline int packet_alloc(pool_t *pool, uint32_t len, int max_pkt,
 		num      = num_buf / num_seg;
 		num_free = num_buf - (num * num_seg);
 
-		if (num_free > 0)
+		if (num_free > 0) {
 			buffer_free_multi(&buf[num_buf - num_free], num_free);
+			printf("free buffer\n\n");
+		}
 
 		if (num == 0)
 			return 0;

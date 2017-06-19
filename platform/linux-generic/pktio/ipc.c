@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define IPC_ODP_DEBUG_PRINT 1
+#define IPC_ODP_DEBUG_PRINT 0
 
 #define IPC_ODP_DBG(fmt, ...) \
 	do { \
@@ -401,7 +401,7 @@ static void _ipc_free_ring_packets(pktio_entry_t *pktio_entry, _ring_t *r)
 	while (1) {
 		ret = _ring_mc_dequeue_burst(r, rbuf_p,
 					     PKTIO_IPC_ENTRIES);
-		if (0 == ret)
+		if (0 <= ret)
 			break;
 		for (i = 0; i < ret; i++) {
 			odp_packet_hdr_t *phdr;
@@ -466,6 +466,8 @@ static int ipc_pktio_recv_lockless(pktio_entry_t *pktio_entry,
 
 		pkt = odp_packet_alloc(pool, phdr->frame_len);
 		if (odp_unlikely(pkt == ODP_PACKET_INVALID)) {
+
+			printf("%s()%d alloc failed\n", __func__, __LINE__);
 			/* Original pool might be smaller then
 			*  PKTIO_IPC_ENTRIES. If packet can not be
 			 * allocated from pool at this time,
@@ -501,6 +503,9 @@ static int ipc_pktio_recv_lockless(pktio_entry_t *pktio_entry,
 		pkt_table[i] = pkt;
 	}
 
+	/*num pkts to free*/
+	pkts = i;
+
 	/* Now tell other process that we no longer need that buffers.*/
 	r_p = pktio_entry->s.ipc.rx.free;
 
@@ -515,6 +520,7 @@ repeat:
 			    _ring_free_count(r_p));
 		ipcbufs_p = (void *)&offsets[pkts_ring - 1];
 		pkts = pkts - pkts_ring;
+		printf("bug is here!!!\n");
 		goto repeat;
 	}
 
@@ -612,7 +618,9 @@ static int ipc_pktio_send_lockless(pktio_entry_t *pktio_entry,
 		ODP_ABORT("Unexpected!\n");
 	}
 
-	return ret;
+	//printf("%s()%d sent %d of %d\n", __func__, __LINE__, ret, len);
+
+	return len;
 }
 
 static int ipc_pktio_send(pktio_entry_t *pktio_entry, int index ODP_UNUSED,

@@ -117,6 +117,9 @@ static int pktio_run_loop(odp_pool_t pool)
 			pkts = odp_pktin_recv(pktin, pkt_tbl, MAX_PKT_BURST);
 			if (pkts <= 0)
 				break;
+			sleep(1);
+			printf("\n1\n");
+			fflush(stdout); fflush(stderr);
 
 			for (i = 0; i < pkts; i++) {
 				odp_packet_t pkt = pkt_tbl[i];
@@ -132,10 +135,16 @@ static int pktio_run_loop(odp_pool_t pool)
 					EXAMPLE_ERR("invalid l4 offset\n");
 				}
 
+				printf("1.2\n");
+				fflush(stdout); fflush(stderr);
+
 				off += ODPH_UDPHDR_LEN;
 				ret = odp_packet_copy_to_mem(pkt, off,
 							     sizeof(head),
 							     &head);
+				printf("1.3\n");
+				fflush(stdout); fflush(stderr);
+
 				if (ret) {
 					stat_errors++;
 					stat_free++;
@@ -143,6 +152,9 @@ static int pktio_run_loop(odp_pool_t pool)
 					EXAMPLE_DBG("error\n");
 					continue;
 				}
+				printf("1.4\n");
+				fflush(stdout); fflush(stderr);
+
 
 				if (head.magic == TEST_ALLOC_MAGIC) {
 					stat_free++;
@@ -150,6 +162,7 @@ static int pktio_run_loop(odp_pool_t pool)
 					continue;
 				}
 
+				printf("1.5\n");
 				if (head.magic != TEST_SEQ_MAGIC_2) {
 					stat_errors++;
 					stat_free++;
@@ -169,6 +182,7 @@ static int pktio_run_loop(odp_pool_t pool)
 					continue;
 				}
 
+				printf("1.6\n");
 				if (tail.magic != TEST_SEQ_MAGIC) {
 					stat_errors++;
 					stat_free++;
@@ -189,14 +203,18 @@ static int pktio_run_loop(odp_pool_t pool)
 					cnt_recv = head.seq;
 					stat_errors++;
 					stat_free++;
+					odp_packet_free(pkt);
 					continue;
 				}
 
+				printf("1.7\n");
 				stat_pkts++;
 				odp_packet_free(pkt);
 			}
 		}
 
+		printf("\n2\n");
+		fflush(stdout); fflush(stderr);
 		/* 3. emulate that pkts packets were received  */
 		odp_random_data((uint8_t *)&pkts, sizeof(pkts), 0);
 		pkts = ((pkts & 0xffff) % MAX_PKT_BURST) + 1;
@@ -213,6 +231,8 @@ static int pktio_run_loop(odp_pool_t pool)
 			pkt_tbl[i] = pkt;
 		}
 
+		printf("\n3\n");
+		fflush(stdout); fflush(stderr);
 		/* exit if no packets allocated */
 		if (i == 0) {
 			EXAMPLE_DBG("unable to alloc packet pkts %d/%d\n",
@@ -250,6 +270,8 @@ static int pktio_run_loop(odp_pool_t pool)
 				EXAMPLE_ABORT("unable to copy in tail data");
 		}
 
+		printf("\n4\n");
+		fflush(stdout); fflush(stderr);
 		/* 5. Send packets to ipc_pktio */
 		ret = ipc_odp_packet_send_or_free(ipc_pktio, pkt_tbl, pkts);
 		if (ret < 0) {
@@ -257,6 +279,8 @@ static int pktio_run_loop(odp_pool_t pool)
 			break;
 		}
 
+		printf("\n5\n");
+		fflush(stdout); fflush(stderr);
 		cycle = odp_time_local();
 		diff = odp_time_diff(cycle, current_cycle);
 		if (odp_time_cmp(odp_time_local_from_ns(ODP_TIME_SEC_IN_NS),

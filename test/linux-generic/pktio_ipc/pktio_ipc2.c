@@ -114,6 +114,9 @@ static int ipc_second_process(int master_pid)
 		if (pkts <= 0)
 			continue;
 
+		printf("\n2 got %d packets\n", pkts);
+		fflush(stdout); fflush(stderr);
+
 		for (i = 0; i < pkts; i++) {
 			odp_packet_t pkt = pkt_tbl[i];
 			pkt_head_t head;
@@ -148,10 +151,16 @@ static int ipc_second_process(int master_pid)
 				EXAMPLE_ABORT("unable to copy in head data");
 		}
 
+		printf("\n3\n");
+		fflush(stdout); fflush(stderr);
+
 		/* send all packets back */
 		ret = ipc_odp_packet_send_or_free(ipc_pktio, pkt_tbl, i);
 		if (ret < 0)
 			EXAMPLE_ABORT("can not send packets\n");
+
+		printf("\n4\n");
+		fflush(stdout); fflush(stderr);
 
 		stat_pkts += ret;
 
