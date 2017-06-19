@@ -14,7 +14,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define IPC_ODP_DEBUG_PRINT 0
+#define IPC_ODP_DEBUG_PRINT 1
 
 #define IPC_ODP_DBG(fmt, ...) \
 	do { \
@@ -436,9 +436,12 @@ static int ipc_pktio_recv_lockless(pktio_entry_t *pktio_entry,
 	_ipc_free_ring_packets(pktio_entry, pktio_entry->s.ipc.tx.free);
 
 	r = pktio_entry->s.ipc.rx.recv;
+
 	pkts = _ring_mc_dequeue_burst(r, ipcbufs_p, len);
 	if (odp_unlikely(pkts < 0))
 		ODP_ABORT("internal error dequeue\n");
+
+	IPC_ODP_DBG("recv %d packets\n", pkts);
 
 	/* fast path */
 	if (odp_likely(0 == pkts))
@@ -503,7 +506,7 @@ static int ipc_pktio_recv_lockless(pktio_entry_t *pktio_entry,
 
 repeat:
 	pkts_ring = _ring_mp_enqueue_burst(r_p, ipcbufs_p, pkts);
-	if (odp_unlikely(pkts < 0))
+	if (odp_unlikely(pkts_ring < 0))
 		ODP_ABORT("ipc: odp_ring_mp_enqueue_bulk r_p fail\n");
 	if (odp_unlikely(pkts != pkts_ring)) {
 		IPC_ODP_DBG("odp_ring_full: %d, odp_ring_count %d,"
