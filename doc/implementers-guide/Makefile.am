@@ -5,7 +5,8 @@ TARGET = implementers-guide.html
 
 EXTRA_DIST = $(SRC)
 
-doc_DATA = $(top_srcdir)/doc/implementers-guide/$(TARGET)
+doc_DATA = $(srcdir)/$(TARGET)
+
 $(TARGET): $(SRC)
 
 clean-local:
