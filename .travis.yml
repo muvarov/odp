@@ -139,21 +139,12 @@ jobs:
                   env: TEST="aarch64-linux-gnu" CROSS="--host=aarch64-linux-gnu --prefix=/usr/aarch64-linux-gnu"
                   install: true
                   script:
-                          - mkdir cross
-                          - pushd cross
                             # one can not include colon in the command or bad things will happen, so mimic it
                           - env echo -e 'Provides\x3a multiarch-support, debconf, debconf-2.0' > dummy
                           - equivs-build -a arm64 dummy
-                          - wget
-                            http://ports.ubuntu.com/pool/main/o/openssl/libssl-dev_1.0.1f-1ubuntu2.22_arm64.deb
-                            http://ports.ubuntu.com/pool/main/o/openssl/libssl1.0.0_1.0.1f-1ubuntu2.22_arm64.deb
-                            http://ports.ubuntu.com/pool/main/libc/libconfig/libconfig-dev_1.4.9-2_arm64.deb
-                            http://ports.ubuntu.com/pool/main/libc/libconfig/libconfig9_1.4.9-2_arm64.deb
-                            http://ports.ubuntu.com/pool/main/p/pkg-config/pkg-config_0.29.1-0ubuntu2_arm64.deb
-                            http://ports.ubuntu.com/pool/main/z/zlib/zlib1g-dev_1.2.8.dfsg-1ubuntu1_arm64.deb
-                            http://ports.ubuntu.com/pool/main/z/zlib/zlib1g_1.2.8.dfsg-1ubuntu1_arm64.deb
-                          - sudo dpkg-cross -i -M -A -a arm64 *.deb
-                          - popd
+                          - sudo dpkg --add-architecture arm64
+                          - sudo apt-get update
+                          - sudo apt-get install libssl-dev:arm64 lib1g-dev:arm64 libconfig:arm64
                           - ./bootstrap
                           - ./configure --prefix=$HOME/odp-install $CROSS
                             --disable-test-cpp --enable-test-vald --enable-test-helper --enable-test-perf --enable-test-perf-proc --enable-test-example
@@ -163,20 +154,12 @@ jobs:
                   env: TEST="arm-linux-gnueabihf" CROSS="--host=arm-linux-gnueabihf --prefix=/usr/arm-linux-gnueabihf"
                   install: true
                   script:
-                          - mkdir cross
-                          - pushd cross
                             # one can not include colon in the command or bad things will happen, so mimic it
                           - env echo -e 'Provides\x3a multiarch-support, debconf, debconf-2.0' > dummy
                           - equivs-build -a armhf dummy
-                          - wget
-                            http://ports.ubuntu.com/pool/main/o/openssl/libssl-dev_1.0.1f-1ubuntu2.22_armhf.deb
-                            http://ports.ubuntu.com/pool/main/o/openssl/libssl1.0.0_1.0.1f-1ubuntu2.22_armhf.deb
-                            http://ports.ubuntu.com/pool/main/z/zlib/zlib1g-dev_1.2.8.dfsg-1ubuntu1_armhf.deb
-                            http://ports.ubuntu.com/pool/main/z/zlib/zlib1g_1.2.8.dfsg-1ubuntu1_armhf.deb
-                            http://ports.ubuntu.com/pool/main/p/pkg-config/pkg-config_0.29.1-0ubuntu2_armhf.deb
-                            http://ports.ubuntu.com/pool/main/libc/libconfig/libconfig9_1.4.9-2_armhf.deb
-                          - sudo dpkg-cross -i -M -A -a armhf *.deb
-                          - popd
+                          - sudo dpkg --add-architecture arm
+                          - sudo apt-get update
+                          - sudo apt-get install libssl-dev:arm lib1g-dev:arm libconfig:arm
                           - ./bootstrap
                           - ./configure --prefix=$HOME/odp-install $CROSS
                             --disable-test-cpp --enable-test-vald --enable-test-helper --enable-test-perf --enable-test-perf-proc --enable-test-example
@@ -186,20 +169,9 @@ jobs:
                   env: TEST="powerpc-linux-gnu" CROSS="--host=powerpc-linux-gnu --prefix=/usr/powerpc-linux-gnu"
                   install: true
                   script:
-                          - mkdir cross
-                          - pushd cross
-                            # one can not include colon in the command or bad things will happen, so mimic it
-                          - env echo -e 'Provides\x3a multiarch-support, debconf, debconf-2.0' > dummy
-                          - equivs-build -a powerpc dummy
-                          - wget
-                            http://ports.ubuntu.com/pool/main/o/openssl/libssl-dev_1.0.1f-1ubuntu2.22_powerpc.deb
-                            http://ports.ubuntu.com/pool/main/o/openssl/libssl1.0.0_1.0.1f-1ubuntu2.22_powerpc.deb
-                            http://ports.ubuntu.com/pool/main/z/zlib/zlib1g-dev_1.2.8.dfsg-1ubuntu1_powerpc.deb
-                            http://ports.ubuntu.com/pool/main/z/zlib/zlib1g_1.2.8.dfsg-1ubuntu1_powerpc.deb
-                            http://ports.ubuntu.com/pool/main/libc/libconfig/libconfig9_1.5-0.2_powerpc.deb
-                            http://ports.ubuntu.com/pool/main/p/pkg-config/pkg-config_0.29.1-0ubuntu1_powerpc.deb
-                          - sudo dpkg-cross -i -M -A -a powerpc *.deb
-                          - popd
+                          - sudo dpkg --add-architecture powerpc
+                          - sudo apt-get update
+                          - sudo apt-get install libssl-dev:powerpc lib1g-dev:powerpc libconfig:powerpc
                           - ./bootstrap
                           - ./configure --prefix=$HOME/odp-install $CROSS
                             --disable-test-cpp --enable-test-vald --enable-test-helper --enable-test-perf --enable-test-perf-proc --enable-test-example
