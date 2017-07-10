@@ -147,6 +147,9 @@ jobs:
                           - wget
                             http://ports.ubuntu.com/pool/main/o/openssl/libssl-dev_1.0.1f-1ubuntu2.22_arm64.deb
                             http://ports.ubuntu.com/pool/main/o/openssl/libssl1.0.0_1.0.1f-1ubuntu2.22_arm64.deb
+                            http://ports.ubuntu.com/pool/main/libc/libconfig/libconfig-dev_1.4.9-2_arm64.deb
+                            http://ports.ubuntu.com/pool/main/libc/libconfig/libconfig9_1.4.9-2_arm64.deb
+                            http://ports.ubuntu.com/pool/main/p/pkg-config/pkg-config_0.29.1-0ubuntu2_arm64.deb
                             http://ports.ubuntu.com/pool/main/z/zlib/zlib1g-dev_1.2.8.dfsg-1ubuntu1_arm64.deb
                             http://ports.ubuntu.com/pool/main/z/zlib/zlib1g_1.2.8.dfsg-1ubuntu1_arm64.deb
                           - sudo dpkg-cross -i -M -A -a arm64 *.deb
@@ -170,6 +173,8 @@ jobs:
                             http://ports.ubuntu.com/pool/main/o/openssl/libssl1.0.0_1.0.1f-1ubuntu2.22_armhf.deb
                             http://ports.ubuntu.com/pool/main/z/zlib/zlib1g-dev_1.2.8.dfsg-1ubuntu1_armhf.deb
                             http://ports.ubuntu.com/pool/main/z/zlib/zlib1g_1.2.8.dfsg-1ubuntu1_armhf.deb
+                            http://ports.ubuntu.com/pool/main/p/pkg-config/pkg-config_0.29.1-0ubuntu2_armhf.deb
+                            http://ports.ubuntu.com/pool/main/libc/libconfig/libconfig9_1.4.9-2_armhf.deb
                           - sudo dpkg-cross -i -M -A -a armhf *.deb
                           - popd
                           - ./bootstrap
@@ -191,6 +196,8 @@ jobs:
                             http://ports.ubuntu.com/pool/main/o/openssl/libssl1.0.0_1.0.1f-1ubuntu2.22_powerpc.deb
                             http://ports.ubuntu.com/pool/main/z/zlib/zlib1g-dev_1.2.8.dfsg-1ubuntu1_powerpc.deb
                             http://ports.ubuntu.com/pool/main/z/zlib/zlib1g_1.2.8.dfsg-1ubuntu1_powerpc.deb
+                            http://ports.ubuntu.com/pool/main/libc/libconfig/libconfig9_1.5-0.2_powerpc.deb
+                            http://ports.ubuntu.com/pool/main/p/pkg-config/pkg-config_0.29.1-0ubuntu1_powerpc.deb
                           - sudo dpkg-cross -i -M -A -a powerpc *.deb
                           - popd
                           - ./bootstrap
