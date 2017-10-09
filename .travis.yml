@@ -202,7 +202,9 @@ script:
           sudo LD_LIBRARY_PATH="$HOME/cunit-install/$CROSS_ARCH/lib:$LD_LIBRARY_PATH" ODP_SHM_DIR=/dev/shm/odp make check ;
           fi
         - make install
-
+        - if [ "$CROSS_ARCH" = "armhf" ]; then
+                sudo bash -x ./scripts/travis-qemu.sh ;
+          fi
         - echo "Checking linking and run from install..."
         - pushd $HOME
         - echo "Dynamic link.."
