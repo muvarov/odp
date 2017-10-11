@@ -1,0 +1,40 @@
+language: c
+
+compiler:
+  - gcc
+  - clang
+
+build:
+  pre_ci:
+    - sudo apt-get install automake autoconf libtool libssl-dev graphviz mscgen libpcap-dev gcc clang
+    - sudo apt-get remove libcunit1-dev libcunit1
+    - export CUNIT_VERSION=2.1-3
+    - |
+      curl -sSOL https://github.com/Linaro/libcunit/releases/download/${CUNIT_VERSION}/CUnit-${CUNIT_VERSION}.tar.bz2
+      tar -jxf *.bz2
+      pushd CUnit*
+      libtoolize --force --copy
+      aclocal
+      autoheader
+      automake --add-missing --include-deps --copy
+      autoconf
+      ./configure --prefix=$HOME/cunit-install --enable-debug --enable-automated --enable-basic --enable-console --enable-examples --enable-test || cat config.log
+      make
+      sudo make install
+      popd
+      sudo ldconfig
+
+  ci:
+    - echo 1000 | sudo tee /proc/sys/vm/nr_hugepages
+    - sudo mkdir -p /mnt/huge
+    - sudo mount -t hugetlbfs nodev /mnt/huge
+    - mkdir -p /dev/shm/odp
+    - ./bootstrap
+    - export PKG_CONFIG_PATH="$HOME/cunit-install/lib/pkgconfig:${PKG_CONFIG_PATH}"
+    - ./configure --disable-test-perf
+    - make
+    - sudo LD_LIBRARY_PATH="$HOME/cunit-install/lib:$LD_LIBRARY_PATH" ODP_SHM_DIR=/dev/shm/odp make check
+
+  post_ci:
+    - cat config.log
+    - find . -name 'test-suite.log' -execdir grep -il "FAILED" {} \; -exec echo {} \; -exec cat {} \;
