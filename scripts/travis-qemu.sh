@@ -47,10 +47,9 @@ function setup_arm_chroot {
     chmod a+x envvars.sh
 
     # Install dependencies inside chroot
-    sudo chroot ${CHROOT_DIR} apt-get install python-software-properties
-    sudo chroot ${CHROOT_DIR} apt-add-repository -y "deb http://ports.ubuntu.com trusty main"
-    sudo chroot ${CHROOT_DIR} apt-add-repository -y "deb http://ports.ubuntu.com trusty-updates main"
- 
+    sudo chroot ${CHROOT_DIR} echo "deb http://ports.ubuntu.com trusty main" >> /etc/apt/sources.list
+    sudo chroot ${CHROOT_DIR} echo "deb http://ports.ubuntu.com trusty-updates main" >> /etc/apt/sources.list
+
     sudo chroot ${CHROOT_DIR} apt-get update
     sudo chroot ${CHROOT_DIR} apt-get --allow-unauthenticated install \
         -qq -y ${GUEST_DEPENDENCIES}
