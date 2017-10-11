@@ -2,8 +2,7 @@
 # Based on a test script from avsm/ocaml repo https://github.com/avsm/ocaml
 
 CHROOT_DIR=/tmp/arm-chroot
-MIRROR=http://archive.raspbian.org/raspbian
-VERSION=wheezy
+VERSION=trusty
 CHROOT_ARCH=armhf
 ARCH=${CROSS_ARCH}
 
@@ -11,7 +10,7 @@ ARCH=${CROSS_ARCH}
 HOST_DEPENDENCIES="debootstrap qemu-user-static binfmt-support sbuild"
 
 # Debian package dependencies for the chrooted environment
-GUEST_DEPENDENCIES="build-essential git m4 sudo python automake autoconf \
+GUEST_DEPENDENCIES="build-essential m4 sudo automake autoconf \
 	libtool libssl-dev graphviz mscgen \
 	libpcap-dev libconfig-dev zlib1g-dev libssl-dev \
 	"
@@ -35,11 +34,11 @@ function setup_arm_chroot {
     # Create chrooted environment
     sudo mkdir ${CHROOT_DIR}
     sudo debootstrap --foreign --no-check-gpg --include=fakeroot,build-essential \
-        --arch=${CHROOT_ARCH} ${VERSION} ${CHROOT_DIR} ${MIRROR}
+        --arch=${CHROOT_ARCH} ${VERSION} ${CHROOT_DIR}
     sudo cp /usr/bin/qemu-arm-static ${CHROOT_DIR}/usr/bin/
     sudo chroot ${CHROOT_DIR} ./debootstrap/debootstrap --second-stage
     sudo sbuild-createchroot --arch=${CHROOT_ARCH} --foreign --setup-only \
-        ${VERSION} ${CHROOT_DIR} ${MIRROR}
+        ${VERSION} ${CHROOT_DIR}
 
     # Create file with environment variables which will be used inside chrooted
     # environment
