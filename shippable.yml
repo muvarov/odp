@@ -6,23 +6,7 @@ compiler:
 
 build:
   pre_ci:
-    - sudo apt-get install automake autoconf libtool libssl-dev graphviz mscgen libpcap-dev gcc clang
-    - sudo apt-get remove libcunit1-dev libcunit1
-    - export CUNIT_VERSION=2.1-3
-    - |
-      curl -sSOL https://github.com/Linaro/libcunit/releases/download/${CUNIT_VERSION}/CUnit-${CUNIT_VERSION}.tar.bz2
-      tar -jxf *.bz2
-      pushd CUnit*
-      libtoolize --force --copy
-      aclocal
-      autoheader
-      automake --add-missing --include-deps --copy
-      autoconf
-      ./configure --prefix=/usr --enable-debug --enable-automated --enable-basic --enable-console --enable-examples --enable-test || cat config.log
-      make
-      sudo make install
-      popd
-
+    - sudo apt-get install automake autoconf libtool libssl-dev graphviz mscgen libpcap-dev gcc clang libcunit1-dev
   ci:
     - echo 1000 | sudo tee /proc/sys/vm/nr_hugepages
     - sudo mkdir -p /mnt/huge
