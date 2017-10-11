@@ -33,7 +33,7 @@ function setup_arm_chroot {
 
     # Create chrooted environment
     sudo mkdir ${CHROOT_DIR}
-    sudo debootstrap --foreign --no-check-gpg --include=fakeroot,build-essential \
+    sudo debootstrap --foreign --no-check-gpg --include=fakeroot,build-essential,${GUEST_DEPENDENCIES} \
         --arch=${CHROOT_ARCH} ${VERSION} ${CHROOT_DIR}
     sudo cp /usr/bin/qemu-arm-static ${CHROOT_DIR}/usr/bin/
     sudo chroot ${CHROOT_DIR} ./debootstrap/debootstrap --second-stage
@@ -45,14 +45,6 @@ function setup_arm_chroot {
     echo "export ARCH=${ARCH}" > envvars.sh
     echo "export TRAVIS_BUILD_DIR=${TRAVIS_BUILD_DIR}" >> envvars.sh
     chmod a+x envvars.sh
-
-    # Install dependencies inside chroot
-    sudo chroot ${CHROOT_DIR} echo "deb http://ports.ubuntu.com trusty main" >> /etc/apt/sources.list
-    sudo chroot ${CHROOT_DIR} echo "deb http://ports.ubuntu.com trusty-updates main" >> /etc/apt/sources.list
-
-    sudo chroot ${CHROOT_DIR} apt-get update
-    sudo chroot ${CHROOT_DIR} apt-get --allow-unauthenticated install \
-        -qq -y ${GUEST_DEPENDENCIES}
 
     # Create build dir and copy travis build files to our chroot environment
     sudo mkdir -p ${CHROOT_DIR}/${TRAVIS_BUILD_DIR}
