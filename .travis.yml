@@ -27,7 +27,8 @@ env:
     # of the configuration example.
     # copy the secure:<key> below
     #
-    - secure: "xxxx"
+    - secure: "VYJdVqXGRIfiU/ZNSd/ygBkd7uVK5r0o21zBvdhDfVCHns/Dp6mDkwqNQRbF3Eb3Z7I6AMnfh0ygTQSJ7p7D14Es4zq1GBvN146obdK7XVepUghZXVNYUYdAcI8IXNJIV3r17CG9JdTzg6PfoNajeigTCnCWkGERvv6ew/+mbBPuIsyZf92v9byazD4qpoa9sGu909epAEoYW9GUFjFO9h+GqO1nWv0Kf8eolX8iF/3NYWC7hP0ZngYUKYM6b/goo91qeKFOvbuTkBeQafVbitX3FHT1uASy2yZiRjIkgVnl9ahb6uFWpKSnP4dgf5ZaIm3ZzsB2kbKe7rbl32vXwdq+xaEsQX/cXUno0c3KZ5djKHX+iTPitmeodT3/eeAnmtFiKNP4Yk3zY4gZIUanrhyEE1nVKmG5j5P8DYutQYjoPRyIlkcW94N061vbL6o7oLT3pjPz9d5635aZE131TWzjiUu4+Tj0a9Cgz1IGAsVpb91aFbVUjyzK7qsAzPg3eU+caDzgu1WWugWo4Xt8iY5WsJXaoZp0S9DXPMY2OS7isWn1hV5S7R0ytsQdl/8nvul1FKNuQ/xyTj9Mi282gFfUFwj+KZlg22wEMDluRjZ36qdP5XNgQQLZvKgXgXb+4VrZ1M2LO72/8jW0f6gTIrmiMNtXvsTXna+dO5crO64="
+
     #
     # By default Linaro CODECOV_TOKEN token is used. It's ok to use it to see
     # for individual commit validation. But you you want to track tests history
@@ -42,13 +43,13 @@ addons:
                         - automake autoconf libtool libssl-dev graphviz mscgen
                         - libpcap-dev
                         - libnuma-dev
-#        coverity_scan:
-#                project:
-#                        name: "$TRAVIS_REPO_SLUG"
-#                        notification_email: xxxx
-#                        build_command_prepend: "./bootstrap && ./configure --enable-test-cpp --enable-test-vald --enable-test-helper --enable-test-perf --enable-user-guides --enable-test-perf-proc --enable-test-example"
-#                        build_command:   "make"
-#                        branch_pattern: coverity_scan
+        coverity_scan:
+                project:
+                        name: "muvarov/odp"
+                        notification_email: muvarov@gmail.com
+                        build_command_prepend: "./bootstrap && ./configure --enable-test-cpp --enable-test-vald --enable-test-helper --enable-test-perf --enable-user-guides --enable-test-perf-proc --enable-test-example"
+                        build_command:   "make"
+                        branch_pattern: coverity_scan
 
 compiler:
         - gcc
@@ -75,7 +76,7 @@ env:
         - CROSS_ARCH="i386"
 
 before_install:
-
+        - echo -n | openssl s_client -connect scan.coverity.com:443 | sed -ne '/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' | sudo tee -a /etc/ssl/certs/ca-
         # Install cross toolchains, etc
         # apt-get update may fail thanks to Ubuntu removing Packages/indices while not removing relevant parts of Release file
         - if [ -n "$CROSS_ARCH" ] ;
