@@ -31,3 +31,13 @@ AM_CONDITIONAL([test_vald], [test "x$test_vald" = "xyes"])
 
 AC_SUBST([CUNIT_CFLAGS])
 AC_SUBST([CUNIT_LIBS])
+
+AC_ARG_ENABLE([cunit_out_xml],
+    [AS_HELP_STRING([--enable-cunit_out_xml],
+		    [output to xml]
+		    [(output test results to xml instead of plain text)])],
+		    [cunit_out_xml=yes], [cunit_out_xml=no])
+AS_IF([test "x$cunit_out_xml" == "xyes"], [TEST_CUNIT_XML=1],
+      [TEST_CUNIT_XML=0])
+AC_DEFINE_UNQUOTED([TEST_CUNIT_XML], [$TEST_CUNIT_XML],
+		   [Define to 1 to output to xml])
