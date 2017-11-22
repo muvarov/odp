@@ -1,3 +1,4 @@
+
 /* Copyright (c) 2014, Linaro Limited
  * All rights reserved.
  *
@@ -7,6 +8,7 @@
 #include "config.h"
 
 #include <string.h>
+#include <unistd.h>
 #include <odp_api.h>
 #include "odp_cunit_common.h"
 #include <odp/helper/odph_api.h>
@@ -14,6 +16,7 @@
 static odph_odpthread_t thread_tbl[MAX_WORKERS];
 static odp_instance_t instance;
 
+extern const char *__progname;
 /*
  * global init/term functions which may be registered
  * defaults to functions performing odp init/term.
@@ -291,13 +294,30 @@ static int cunit_update_suite(odp_suiteinfo_t *updated_sinfo)
 int odp_cunit_run(void)
 {
 	int ret;
+#ifdef TEST_CUNIT_XML
+	char name[255];
+#endif
 
 	printf("\tODP API version: %s\n", odp_version_api_str());
 	printf("\tODP implementation name:    %s\n", odp_version_impl_name());
 	printf("\tODP implementation version: %s\n", odp_version_impl_str());
 
+#ifdef TEST_CUNIT_XML
+	if (strlen(__progname)) {
+		snprintf(name, 255, "%s", __progname);
+		CU_set_output_filename(name);
+	} else {
+		/* forked processes do not have __progname */
+		ret = readlink("/proc/self/exe", name, sizeof(name) - 1);
+		name[ret] = 0;
+		CU_set_output_filename(basename(name));
+	}
+
+	CU_automated_run_tests();
+#else
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
+#endif
 
 	ret = CU_get_number_of_failure_records();
 

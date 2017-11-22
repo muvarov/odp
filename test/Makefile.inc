@@ -17,6 +17,9 @@ INCFLAGS = \
 
 AM_CPPFLAGS = $(INCFLAGS)
 AM_CFLAGS = $(CUNIT_CFLAGS)
+if cunit_out_xml
+AM_CFLAGS  += -DTEST_CUNIT_XML
+endif
 
 AM_LDFLAGS = -L$(LIB) -static
 

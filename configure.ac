@@ -383,6 +383,7 @@ AC_MSG_RESULT([
 	Deprecated APIs:	${deprecated}
 	debug:			${enable_debug}
 	cunit:			${cunit_support}
+	cunit xml output:	${cunit_out_xml}
 	test_vald:		${test_vald}
 	test_perf:		${test_perf}
 	test_perf_proc:		${test_perf_proc}

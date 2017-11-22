@@ -17,6 +17,9 @@
 #include <inttypes.h>
 #include "CUnit/Basic.h"
 #include "CUnit/TestDB.h"
+#ifdef TEST_CUNIT_XML
+#include <CUnit/Automated.h>
+#endif
 #include <odp_api.h>
 
 #define MAX_WORKERS 32 /**< Maximum number of work threads */

@@ -19,6 +19,14 @@ AS_IF([test "x$cunit_support" != "xno"],
 		 [cunit_support=no])
 ])])
 
+
+##########################################################################
+AC_ARG_ENABLE([cunit_out_xml],
+    [AS_HELP_STRING([--enable-cunit_out_xml],
+		    [include additional debugging code ]
+		    [(set to 'full' to enable all --enable-*-debug-* options)])],
+		    cunit_out_xml=yes, cunit_out_xml=no)
+
 AS_IF([test "x$test_vald" = "xyes" -a "x$cunit_support" = "xno"],
       [AC_MSG_ERROR([Validation testsuite requested, but CUnit was not found])],
       [test "x$test_vald" = "xcheck" -a "x$cunit_support" = "xno"],
@@ -27,6 +35,7 @@ AS_IF([test "x$test_vald" = "xyes" -a "x$cunit_support" = "xno"],
       [test "x$test_vald" != "xno"], [test_vald=yes])
 
 AM_CONDITIONAL([cunit_support], [test "x$cunit_support" = "xyes"])
+AM_CONDITIONAL([cunit_out_xml], [test "x$cunit_out_xml" = "xyes"])
 AM_CONDITIONAL([test_vald], [test "x$test_vald" = "xyes"])
 
 AC_SUBST([CUNIT_CFLAGS])
