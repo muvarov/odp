@@ -15,8 +15,8 @@
 
 #include <stdint.h>
 #include <inttypes.h>
-#include "CUnit/Basic.h"
-#include "CUnit/TestDB.h"
+#include <CUnit/Basic.h>
+#include <CUnit/TestDB.h>
 #ifdef TEST_CUNIT_XML
 #include <CUnit/Automated.h>
 #endif
