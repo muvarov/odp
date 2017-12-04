@@ -241,7 +241,7 @@ static int setup_pkt_ref_array(odp_pool_t pool,
  * @param pkt_array Packet array
  * @param pkt_array_size Packet array size
  * @param setup_pkt Packet setup function
- * @return 0 success, -1 failed
+ * @return number of set packets
 */
 static int setup_pkt_array(odp_pktout_config_opt_t *pktout_cfg,
 			   odp_packet_t *pkt_ref_array,
@@ -259,13 +259,8 @@ static int setup_pkt_array(odp_pktout_config_opt_t *pktout_cfg,
 		if (pkt_array[i] == ODP_PACKET_INVALID)
 			break;
 	}
-	if (i < pkt_array_size) {
-		if (i)
-			odp_packet_free_multi(pkt_array, i - 1);
 
-		return -1;
-	}
-	return 0;
+	return i;
 }
 
 /**
@@ -636,39 +631,39 @@ static int gen_send_thread(void *arg)
 
 	odp_barrier_wait(&barrier);
 
+	int i = 0;
 	for (;;) {
-		if (args->appl.number != -1 &&
-		    odp_atomic_fetch_add_u64(&counters.cnt, pkt_array_size) >=
-				(unsigned int)args->appl.number)
-			break;
-
 		/* Setup TX burst*/
-		if (setup_pkt_array(pktout_cfg, pkt_ref_array, pkt_array,
-				    pkt_array_size, setup_pkt)) {
-			EXAMPLE_ERR("[%02i] Error: failed to setup packets\n",
-				    thr);
-			break;
-		}
+		i = setup_pkt_array(pktout_cfg, pkt_ref_array, pkt_array,
+				    pkt_array_size, setup_pkt);
+		if  (odp_unlikely(i == 0))
+			continue;
 
 		/* Send TX burst*/
-		for (burst_start = 0, burst_size = pkt_array_size;;) {
+		for (burst_start = 0, burst_size = i;;) {
 			ret = odp_pktout_send(pktout, &pkt_array[burst_start],
-					      burst_size);
-			if (ret == burst_size) {
+					      i);
+			if (ret == i) {
 				break;
 			} else if (ret >= 0 && ret < burst_size) {
 				odp_atomic_add_u64(&counters.tx_drops,
-						   burst_size - ret);
+						   i - ret);
 				burst_start += ret;
-				burst_size -= ret;
-				odp_time_wait_ns(ODP_TIME_MSEC_IN_NS);
+				i -= ret;
+				//odp_time_wait_ns(ODP_TIME_MSEC_IN_NS);
 				continue;
 			}
 			EXAMPLE_ERR("  [%02i] packet send failed\n", thr);
 			odp_packet_free_multi(&pkt_array[burst_start],
-					      burst_size);
+					      i);
 			break;
 		}
+
+		if (args->appl.number != -1 &&
+		    odp_atomic_fetch_add_u64(&counters.cnt, i) >=
+				(unsigned int)args->appl.number)
+			break;
+
 
 		if (args->appl.interval != 0) {
 			printf("  [%02i] send pkt no:%ju seq %ju\n",
@@ -698,7 +693,7 @@ static int gen_send_thread(void *arg)
 		}
 	}
 
-	odp_packet_free_multi(pkt_ref_array, pkt_array_size);
+	odp_packet_free_multi(pkt_ref_array, i);
 
 	return 0;
 }
