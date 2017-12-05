@@ -974,6 +974,7 @@ static int dpdk_setup_port(pktio_entry_t *pktio_entry)
 	struct rte_eth_fc_conf fc_conf;
 
 	rte_eth_dev_flow_ctrl_get(pkt_dpdk->port_id, &fc_conf);
+	printf("chaning flow control from %d to %d\n", fc_conf.mode, RTE_FC_NONE);
 	fc_conf.mode = RTE_FC_NONE;
 	fc_conf.low_water = 0;
 	fc_conf.high_water = 0;
