@@ -1395,6 +1395,7 @@ static int dpdk_start(pktio_entry_t *pktio_entry)
 	uint8_t port_id = pkt_dpdk->port_id;
 	int ret;
 	unsigned i;
+	struct rte_eth_dev_info dev_info;
 
 	/* DPDK doesn't support nb_rx_q/nb_tx_q being 0 */
 	if (!pktio_entry->s.num_in_queue)
@@ -1407,9 +1408,14 @@ static int dpdk_start(pktio_entry_t *pktio_entry)
 		ODP_ERR("Failed to configure device\n");
 		return -1;
 	}
+
+	rte_eth_dev_info_get(port_id, &dev_info);
+	ODP_PRINT("RX descs %d TX descs %d\n",
+		  dev_info.rx_desc_lim.nb_max,
+		  dev_info.tx_desc_lim.nb_max);
+
 	/* Init TX queues */
 	for (i = 0; i < pktio_entry->s.num_out_queue; i++) {
-		struct rte_eth_dev_info dev_info;
 		const struct rte_eth_txconf *txconf = NULL;
 		int ip_ena  = pktio_entry->s.config.pktout.bit.ipv4_chksum_ena;
 		int udp_ena = pktio_entry->s.config.pktout.bit.udp_chksum_ena;
@@ -1442,13 +1448,12 @@ static int dpdk_start(pktio_entry_t *pktio_entry)
 				     ETH_TXQ_FLAGS_NOMULTMEMP |
 				     ETH_TXQ_FLAGS_NOVLANOFFL;
 
-			rte_eth_dev_info_get(port_id, &dev_info);
 			dev_info.default_txconf.txq_flags = txq_flags;
 			txconf = &dev_info.default_txconf;
 			pktio_entry->s.chksum_insert_ena = 1;
 		}
 
-		ret = rte_eth_tx_queue_setup(port_id, i, DPDK_NM_TX_DESC,
+		ret = rte_eth_tx_queue_setup(port_id, i, dev_info.tx_desc_lim.nb_max,
 					     rte_eth_dev_socket_id(port_id),
 					     txconf);
 		if (ret < 0) {
@@ -1459,7 +1464,7 @@ static int dpdk_start(pktio_entry_t *pktio_entry)
 	}
 	/* Init RX queues */
 	for (i = 0; i < pktio_entry->s.num_in_queue; i++) {
-		ret = rte_eth_rx_queue_setup(port_id, i, DPDK_NM_RX_DESC,
+		ret = rte_eth_rx_queue_setup(port_id, i, dev_info.rx_desc_lim.nb_max,
 					     rte_eth_dev_socket_id(port_id),
 					     NULL, pkt_dpdk->pkt_pool);
 		if (ret < 0) {
