@@ -1453,7 +1453,8 @@ static int dpdk_start(pktio_entry_t *pktio_entry)
 			pktio_entry->s.chksum_insert_ena = 1;
 		}
 
-		ret = rte_eth_tx_queue_setup(port_id, i, dev_info.tx_desc_lim.nb_max,
+		ret = rte_eth_tx_queue_setup(port_id, i,
+					     dev_info.tx_desc_lim.nb_max > 1024 ? 1024 : dev_info.tx_desc_lim.nb_max,
 					     rte_eth_dev_socket_id(port_id),
 					     txconf);
 		if (ret < 0) {
@@ -1464,7 +1465,8 @@ static int dpdk_start(pktio_entry_t *pktio_entry)
 	}
 	/* Init RX queues */
 	for (i = 0; i < pktio_entry->s.num_in_queue; i++) {
-		ret = rte_eth_rx_queue_setup(port_id, i, dev_info.rx_desc_lim.nb_max,
+		ret = rte_eth_rx_queue_setup(port_id, i,
+					     dev_info.rx_desc_lim.nb_max > 1024 ? 1024 : dev_info.rx_desc_lim.nb_max,
 					     rte_eth_dev_socket_id(port_id),
 					     NULL, pkt_dpdk->pkt_pool);
 		if (ret < 0) {
