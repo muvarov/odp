@@ -512,18 +512,18 @@ static int create_pktio(const char *dev, odp_pool_t pool,
 		return -1;
 	}
 	odp_pktio_config_init(&itf->config);
-	itf->config.pktin.bit.ipv4_chksum = capa.config.pktin.bit.ipv4_chksum;
-	itf->config.pktin.bit.udp_chksum = capa.config.pktin.bit.udp_chksum;
+	itf->config.pktin.bit.ipv4_chksum = 0; //capa.config.pktin.bit.ipv4_chksum;
+	itf->config.pktin.bit.udp_chksum = 0; //capa.config.pktin.bit.udp_chksum;
 	itf->config.pktin.bit.drop_ipv4_err =
-		capa.config.pktin.bit.drop_ipv4_err;
-	itf->config.pktin.bit.drop_udp_err = capa.config.pktin.bit.drop_udp_err;
+		0; //capa.config.pktin.bit.drop_ipv4_err;
+	itf->config.pktin.bit.drop_udp_err = 0; //capa.config.pktin.bit.drop_udp_err;
 
 	itf->config.pktout.bit.ipv4_chksum_ena =
-		capa.config.pktout.bit.ipv4_chksum_ena;
+		0; //capa.config.pktout.bit.ipv4_chksum_ena;
 	itf->config.pktout.bit.udp_chksum_ena =
-		capa.config.pktout.bit.udp_chksum_ena;
-	itf->config.pktout.bit.ipv4_chksum = capa.config.pktout.bit.ipv4_chksum;
-	itf->config.pktout.bit.udp_chksum = capa.config.pktout.bit.udp_chksum;
+		0; //capa.config.pktout.bit.udp_chksum_ena;
+	itf->config.pktout.bit.ipv4_chksum = 0; //capa.config.pktout.bit.ipv4_chksum;
+	itf->config.pktout.bit.udp_chksum = 0; //capa.config.pktout.bit.udp_chksum;
 
 	if (odp_pktio_config(itf->pktio, &itf->config)) {
 		EXAMPLE_ERR("Error: Failed to set interface configuration %s\n",
