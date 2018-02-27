@@ -340,6 +340,19 @@ jobs:
                                true
                              fi
                 - stage: "build only"
+                  env: CROSS_ARCH="i386"
+                  compiler: cgcc
+                  install: true
+                  script:
+                          - git clone git.kernel.org/pub/scm/devel/sparse/sparse.git
+                          - pushd sparse
+                          - make
+                          - export PATH=`pwd`:$PATH
+                          - popd
+                          - ./bootstrap
+                          - ./configure --enable-helper-linux CC="cgcc"
+                          - CCACHE_DISABLE=1 LD_LIBRARY_PATH="$HOME/cunit-install/$CROSS_ARCH/lib:$LD_LIBRARY_PATH" make
+                - stage: "build only"
                   env: CONF=""
                   compiler: gcc
                   install: true
