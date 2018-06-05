@@ -10,11 +10,7 @@ PCAP_IN=`find . ${TEST_DIR} $(dirname $0) -name udp64.pcap -print -quit`
 echo "using PCAP_IN = ${PCAP_IN}"
 
 ./odp_l2fwd_simple${EXEEXT} pcap:in=${PCAP_IN} pcap:out=pcapout.pcap \
-	02:00:00:00:00:01 02:00:00:00:00:02 &
-
-sleep 1
-kill -s SIGINT $!
-wait $!
+	02:00:00:00:00:01 02:00:00:00:00:02 -t
 STATUS=$?
 
 if [ "$STATUS" -ne 0 ]; then
@@ -30,11 +26,7 @@ fi
 rm -f pcapout.pcap
 
 ./odp_l2fwd_simple${EXEEXT} null:0 null:1 \
-	02:00:00:00:00:01 02:00:00:00:00:02 &
-
-sleep 1
-kill -s SIGINT $!
-wait $!
+	02:00:00:00:00:01 02:00:00:00:00:02 -t
 STATUS=$?
 
 if [ "$STATUS" -ne 255 ]; then

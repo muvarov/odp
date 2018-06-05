@@ -18,7 +18,8 @@
 #define MAX_WORKERS 1
 
 static int exit_thr;
-static int g_ret;
+static int g_ret = -1;
+static int exit_10pkts;
 
 struct {
 	odp_pktio_t if0, if1;
@@ -106,8 +107,13 @@ static int run_worker(void *arg ODP_UNUSED)
 		pkts = odp_pktin_recv_tmo(global.if0in, pkt_tbl, MAX_PKT_BURST,
 					  wait_time);
 
-		if (odp_unlikely(pkts <= 0))
-			continue;
+		printf("pkts %d\n", pkts);
+		if (odp_unlikely(pkts <= 0)) {
+			if (exit_10pkts)
+				break;
+			else
+				continue;
+		}
 		for (i = 0; i < pkts; i++) {
 			odp_packet_t pkt = pkt_tbl[i];
 			odph_ethhdr_t *eth;
@@ -129,8 +135,8 @@ static int run_worker(void *arg ODP_UNUSED)
 			odp_packet_free_multi(&pkt_tbl[sent], tx_drops);
 	}
 
-	if (total_pkts < 10)
-		g_ret = -1;
+	if (total_pkts >= 10)
+		g_ret = 0;
 
 	return 0;
 }
@@ -149,7 +155,7 @@ int main(int argc, char **argv)
 	/* let helper collect its own arguments (e.g. --odph_proc) */
 	argc = odph_parse_options(argc, argv);
 
-	if (argc != 5 ||
+	if (argc > 6 ||
 	    odph_eth_addr_parse(&global.dst, argv[3]) != 0 ||
 	    odph_eth_addr_parse(&global.src, argv[4]) != 0) {
 		printf("Usage: odp_l2fwd_simple eth0 eth1 01:02:03:04:05:06"
@@ -160,6 +166,8 @@ int main(int argc, char **argv)
 		       " and source MAC address\n");
 		exit(1);
 	}
+	if (argc == 6 && !strncmp(argv[5], "-t", 2))
+		exit_10pkts = 1;
 
 	if (odp_init_global(&instance, NULL, NULL)) {
 		printf("Error: ODP global init failed.\n");
