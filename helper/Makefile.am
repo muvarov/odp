@@ -6,7 +6,6 @@ pkgconfig_DATA = libodphelper.pc
 AM_CPPFLAGS = \
 	$(ODP_INCLUDES) \
 	$(HELPER_INCLUDES)
-AM_CFLAGS = $(PTHREAD_CFLAGS)
 
 AM_LDFLAGS = -version-number '$(ODPHELPER_LIBSO_VERSION)'
 
