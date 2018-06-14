@@ -24,6 +24,9 @@ addons:
                         - codespell
                         - libpcap-dev
                         - libnuma-dev
+                        - software-properties-common
+                        - dpkg-dev
+                        - automake autoconf libtool libssl-dev graphviz mscgen gcc libpcap-dev libnuma-dev
 #        coverity_scan:
 #                project:
 #                        name: "$TRAVIS_REPO_SLUG"
@@ -78,7 +81,7 @@ before_install:
                   sudo -E apt-add-repository -y "deb http://ports.ubuntu.com trusty main" ;
                   sudo -E apt-add-repository -y "deb http://ports.ubuntu.com trusty-updates main" ;
                   sudo -E apt-get -y update || true ;
-                  PKGS="build-essential libc6-dev:$CROSS_ARCH libssl-dev:$CROSS_ARCH zlib1g-dev:$CROSS_ARCH libconfig-dev:$CROSS_ARCH libstdc++-4.8-dev:$CROSS_ARCH libpcap0.8-dev:$CROSS_ARCH" ;
+                  PKGS="build-essential libc6-dev-${CROSS_ARCH}-cross libssl-dev:$CROSS_ARCH zlib1g-dev:$CROSS_ARCH libconfig-dev:$CROSS_ARCH libstdc++-4.8-dev:$CROSS_ARCH libpcap0.8-dev:$CROSS_ARCH" ;
                   if [ "$CROSS_ARCH" = "i386" ] ;
                   then
                         PKGS="$PKGS g++-multilib" ;
