@@ -20,7 +20,7 @@ static inline void odp_cpu_pause(void)
 	 * ISB flushes the pipeline, then restarts. This is guaranteed to
 	 * stall the CPU a number of cycles.
 	 */
-	__asm volatile("isb" ::: "memory");
+	__asm volatile("isb sy" ::: "memory");
 }
 
 #ifdef __cplusplus
