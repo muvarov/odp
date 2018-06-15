@@ -20,7 +20,7 @@ AC_DEFUN([ODP_CHECK_CFLAG],
 		[AC_MSG_RESULT([yes])
 		ODP_CFLAGS="$ODP_CFLAGS $1"],
 		[AC_MSG_RESULT([no])])
-	  CFLAGS="$ac_saved_cflags"
+	  CFLAGS="$saved_cflags"
 	  AC_LANG_POP([C])])
 
 # ODP_CHECK_CXXFLAG(FLAG)
