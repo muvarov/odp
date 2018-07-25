@@ -27,7 +27,6 @@ cd ./odp
 ./configure ${CONF} \
 	--with-dpdk-path=${DPDKPATH}
 
-make clean
 make -j 8
 # Ignore possible failures there because these tests depends on measurements
 # and systems might differ in performance.
