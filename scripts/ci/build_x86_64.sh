@@ -29,8 +29,8 @@ cd ./odp
 
 make clean
 make -j 8
-# Tell some time sensative ODP test that they can be skipped due to not
-# isolated environment.
+# Ignore possible failures there because these tests depends on measurements
+# and systems might differ in performance.
 export CI="true"
 make check
 
