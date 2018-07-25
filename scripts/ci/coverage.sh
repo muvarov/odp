@@ -21,7 +21,6 @@ cd ./odp
 ./configure \
 	CFLAGS="-O0 -coverage" CXXFLAGS="-O0 -coverage" LDFLAGS="--coverage" \
 	--enable-debug=full --enable-helper-linux
-make clean
 export CCACHE_DISABLE=1
 make -j $(nproc)
 
