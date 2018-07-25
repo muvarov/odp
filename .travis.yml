@@ -139,7 +139,6 @@ jobs:
                              fi
                 - stage: "build only"
                   env: Ubuntu14.04_arm64
-                  compiler: gcc
                   script:
                           - docker run  -i -t -v `pwd`:/odp -v /lib/modules:/lib/modules -v /usr/src:/usr/src
                               lngodp/odp_ubuntu_14.04.5  /root/build_arm64.sh
