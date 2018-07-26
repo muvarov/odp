@@ -10,12 +10,6 @@ CWD=$(dirname "$0")
 TDIR=`mktemp -d -p ~`
 
 cd ${TDIR}
-export CROSS_ARCH=""
-
-export TARGET="x86_64$DPDKCC"
-
-$CWD/build_dpdk.sh
-DPDKPATH=`cat /tmp/dpdk_install_dir`
 
 echo 1000 | tee /proc/sys/vm/nr_hugepages
 mkdir -p /mnt/huge
@@ -25,7 +19,7 @@ git clone ${CWD}/../../ odp
 cd ./odp
 ./bootstrap
 ./configure ${CONF} \
-	--with-dpdk-path=${DPDKPATH}
+	--enable-dpdk
 
 make -j 8
 # Ignore possible failures there because these tests depends on measurements
