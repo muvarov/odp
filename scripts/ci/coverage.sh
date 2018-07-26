@@ -10,17 +10,13 @@ CWD=$(dirname "$0")
 TDIR=`mktemp -d -p ~`
 
 cd ${TDIR}
-export CROSS_ARCH=""
-export TARGET="x86_64$DPDKCC"
-
-$CWD/build_dpdk.sh
 
 git clone ${CWD}/../../ odp
 cd ./odp
 ./bootstrap
 ./configure \
 	CFLAGS="-O0 -coverage" CXXFLAGS="-O0 -coverage" LDFLAGS="--coverage" \
-	--enable-debug=full --enable-helper-linux
+	--enable-debug=full --enable-helper-linux --enable-dpdk
 export CCACHE_DISABLE=1
 make -j $(nproc)
 
