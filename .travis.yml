@@ -60,7 +60,7 @@ env:
         - CONF=""
         - CONF="--disable-abi-compat"
         - CONF="--enable-deprecated"
-        - CONF="--enable-dpdk-zero-copy"
+        - CONF="--enable-dpdk-zero-copy --disable-static-applications"
         - CONF="--disable-static-applications"
         - CONF="--disable-host-optimization"
         - CONF="--disable-host-optimization --disable-abi-compat"
