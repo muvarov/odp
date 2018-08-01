@@ -75,7 +75,7 @@ compiler:
 install:
         - sudo apt-get install linux-headers-`uname -r`
 script:
-        - if [ "${CC#clang}" != "${CC}" ] ; then LD=ld CXX=clang++; fi
+        - if [ "${CC#clang}" != "${CC}" ] ; then LD="" CXX=clang++; fi
         - if [ -n "${CROSS_ARCH}" ] ; then
                docker run  -i -t -v `pwd`:/odp -v /lib/modules:/lib/modules -v /usr/src:/usr/src
                  -e CC="${CC}" -e LD="${LD}" -e CXX="${CXX}"
