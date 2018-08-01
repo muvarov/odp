@@ -86,7 +86,7 @@ script:
                  -v `pwd`:/odp -v/lib/modules:/lib/modules -v/usr/src:/usr/src --shm-size 8g
                  -e CC="${CC}" -e LD="${LD}" -e CXX="${CXX}"
                  -e CONF="${CONF}" -e DPDK_SHARED="${DPDK_SHARED}"
-                 ${DOCKER_NAMESPACE}/travis-odp-lng-x86 /odp/scripts/ci/build_x86_64.sh $CONF ;
+                 ${DOCKER_NAMESPACE}/travis-odp-lng-x86 /odp/scripts/ci/build_x86_64.sh ;
           fi
 jobs:
         include:
