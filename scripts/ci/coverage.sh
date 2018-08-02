@@ -19,7 +19,7 @@ cd ./odp
 ./bootstrap
 ./configure \
 	CFLAGS="-O0 -coverage $CLFAGS" CXXFLAGS="-O0 -coverage $CXXFLAGS" LDFLAGS="--coverage $LDFLAGS" \
-	--enable-debug=full --enable-helper-linux --enable-dpdk
+	--enable-debug=full --enable-helper-linux --enable-dpdk --disable-test-perf --disable-test-perf-proc
 export CCACHE_DISABLE=1
 make -j $(nproc)
 
