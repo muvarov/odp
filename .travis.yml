@@ -82,8 +82,18 @@ script:
                  -e CONF="${CONF}" -e DPDK_SHARED="${DPDK_SHARED}"
                  lngodp/odp_ubuntu_14.04.5  /root/build_${CROSS_ARCH}.sh ;
           else
+               echo "compilling netmap";
+               CDIR=`pwd` ;
+               git -c advice.detachedHead=false clone -q --depth=1 --single-branch --branch=v11.2 https://github.com/luigirizzo/netmap.git;
+               pushd netmap/LINUX;
+               ./configure;
+               make -j $(nproc);
+               popd;
+               sudo insmod ./netmap/LINUX/netmap.ko;
+               CONF="$CONF --with-netmap-path=/odp/netmap";
+               echo "Running test" ;
                docker run --privileged -i -t
-                 -v `pwd`:/odp -v/lib/modules:/lib/modules -v/usr/src:/usr/src --shm-size 8g
+                 -v `pwd`:/odp --shm-size 8g
                  -e CC="${CC}" -e LD="${LD}" -e CXX="${CXX}"
                  -e CONF="${CONF}" -e DPDK_SHARED="${DPDK_SHARED}"
                  ${DOCKER_NAMESPACE}/travis-odp-lng-x86 /odp/scripts/ci/build_x86_64.sh ;
