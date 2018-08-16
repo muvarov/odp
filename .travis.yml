@@ -77,7 +77,7 @@ install:
 script:
         - if [ "${CC#clang}" != "${CC}" ] ; then LD="" CXX=clang++; fi
         - if [ -n "${CROSS_ARCH}" ] ; then
-               docker run  -i -t -v `pwd`:/odp -v /lib/modules:/lib/modules -v /usr/src:/usr/src
+               docker run  -i -t -v `pwd`:/odp
                  -e CC="${CC}" -e LD="${LD}" -e CXX="${CXX}"
                  -e CONF="${CONF}" -e DPDK_SHARED="${DPDK_SHARED}"
                  lngodp/odp_ubuntu_14.04.5  /root/build_${CROSS_ARCH}.sh ;
@@ -105,7 +105,7 @@ jobs:
                   compiler: gcc
                   script:
                           - docker run --privileged -i -t
-                              -v `pwd`:/odp -v /lib/modules:/lib/modules -v /usr/src:/usr/src --shm-size 8g
+                              -v `pwd`:/odp --shm-size 8g
                               -e CODECOV_TOKEN="${CODECOV_TOKEN}"
                               -e CC="${CC}" -e LD="${LD}" -e CXX="${CXX}"
                               -e CONF="${CONF}"
@@ -115,7 +115,7 @@ jobs:
                   compiler: gcc
                   script:
                           - docker run --privileged -i -t
-                              -v `pwd`:/odp -v /lib/modules:/lib/modules -v /usr/src:/usr/src --shm-size 8g
+                              -v `pwd`:/odp --shm-size 8g
                               -e CC="${CC}" -e LD="${LD}" -e CXX="${CXX}"
                               -e CONF="${CONF}"
                               ${DOCKER_NAMESPACE}/travis-odp-lng-x86 /odp/scripts/ci/distcheck.sh
@@ -150,7 +150,7 @@ jobs:
                 - stage: "build only"
                   env: Ubuntu14.04_arm64
                   script:
-                          - docker run  -i -t -v `pwd`:/odp -v /lib/modules:/lib/modules -v /usr/src:/usr/src
+                          - docker run  -i -t -v `pwd`:/odp
                               lngodp/odp_ubuntu_14.04.5  /root/build_arm64.sh
                 - stage: test
                   compiler: gcc
@@ -175,7 +175,7 @@ jobs:
                   env: CROSS_ARCH="i386"
                   script:
                           - docker run --privileged -i -t
-                              -v `pwd`:/odp -v /lib/modules:/lib/modules -v /usr/src:/usr/src
+                              -v `pwd`:/odp
                               -e CC="${CC}" -e LD="${LD}" -e CXX="${CXX}"
                               -e CONF="${CONF}"
                               lngodp/odp_ubuntu_14.04.5_i386 /root/build_${CROSS_ARCH}.sh ;
@@ -184,7 +184,7 @@ jobs:
                   env: CROSS_ARCH="i386"
                   script:
                           - docker run --privileged -i -t
-                              -v `pwd`:/odp -v /lib/modules:/lib/modules -v /usr/src:/usr/src
+                              -v `pwd`:/odp
                               -e CC="${CC}" -e LD="${LD}" -e CXX="${CXX}"
                               -e CONF="${CONF}"
                               lngodp/odp_ubuntu_14.04.5_i386 /root/build_${CROSS_ARCH}.sh ;
@@ -211,7 +211,7 @@ jobs:
                   env: CROSS_ARCH="i386" CONF="--disable-abi-compat"
                   script:
                           - docker run --privileged -i -t
-                              -v `pwd`:/odp -v /lib/modules:/lib/modules -v /usr/src:/usr/src
+                              -v `pwd`:/odp
                               -e CC="${CC}" -e LD="${LD}" -e CXX="${CXX}"
                               -e CONF="${CONF}"
                               lngodp/odp_ubuntu_14.04.5_i386 /root/build_${CROSS_ARCH}.sh ;
@@ -220,7 +220,7 @@ jobs:
                   env: CROSS_ARCH="i386" CONF="--disable-abi-compat"
                   script:
                           - docker run --privileged -i -t
-                              -v `pwd`:/odp -v /lib/modules:/lib/modules -v /usr/src:/usr/src
+                              -v `pwd`:/odp
                               -e CC="${CC}" -e LD="${LD}" -e CXX="${CXX}"
                               -e CONF="${CONF}"
                               lngodp/odp_ubuntu_14.04.5_i386 /root/build_${CROSS_ARCH}.sh ;
