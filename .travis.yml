@@ -55,7 +55,6 @@ env:
         # you need generated new one at https://codecov.io specific for your repo.
         - CODECOV_TOKEN=a733c34c-5f5c-4ff1-af4b-e9f5edb1ab5e
         - DPDK_VERS="17.11.3"
-        - DOCKER_NAMESPACE="lngodp"
     matrix:
         - CONF=""
         - CONF="--disable-abi-compat"
@@ -80,7 +79,7 @@ script:
                docker run  -i -t -v `pwd`:/odp
                  -e CC="${CC}" -e LD="${LD}" -e CXX="${CXX}"
                  -e CONF="${CONF}" -e DPDK_SHARED="${DPDK_SHARED}"
-                 lngodp/odp_ubuntu_14.04.5  /root/build_${CROSS_ARCH}.sh ;
+                 ${DOCKER_NAMESPACE}/travis-odp-lng-ubuntu_14.04.05 /odp/scripts/ci/build_${CROSS_ARCH}.sh ;
           else
                echo "compilling netmap";
                CDIR=`pwd` ;
@@ -151,7 +150,7 @@ jobs:
                   env: Ubuntu14.04_arm64
                   script:
                           - docker run  -i -t -v `pwd`:/odp
-                              lngodp/odp_ubuntu_14.04.5  /root/build_arm64.sh
+                              ${DOCKER_NAMESPACE}/travis-odp-lng-ubuntu_14.04.05 /odp/scripts/ci/build_arm64.sh
                 - stage: test
                   compiler: gcc
                   env: CROSS_ARCH="arm64"
@@ -178,7 +177,7 @@ jobs:
                               -v `pwd`:/odp
                               -e CC="${CC}" -e LD="${LD}" -e CXX="${CXX}"
                               -e CONF="${CONF}"
-                              lngodp/odp_ubuntu_14.04.5_i386 /root/build_${CROSS_ARCH}.sh ;
+                             ${DOCKER_NAMESPACE}/travis-odp-lng-ubuntu_14.04.05_i386 /odp/scripts/ci/build_${CROSS_ARCH}.sh ;
                 - stage: test
                   compiler: clang
                   env: CROSS_ARCH="i386"
@@ -187,7 +186,7 @@ jobs:
                               -v `pwd`:/odp
                               -e CC="${CC}" -e LD="${LD}" -e CXX="${CXX}"
                               -e CONF="${CONF}"
-                              lngodp/odp_ubuntu_14.04.5_i386 /root/build_${CROSS_ARCH}.sh ;
+                              ${DOCKER_NAMESPACE}/travis-odp-lng-ubuntu_14.04.05_i386 /odp/scripts/ci/build_${CROSS_ARCH}.sh ;
                 - stage: test
                   compiler: gcc
                   env: CROSS_ARCH="arm64" CONF="--disable-abi-compat"
@@ -214,7 +213,7 @@ jobs:
                               -v `pwd`:/odp
                               -e CC="${CC}" -e LD="${LD}" -e CXX="${CXX}"
                               -e CONF="${CONF}"
-                              lngodp/odp_ubuntu_14.04.5_i386 /root/build_${CROSS_ARCH}.sh ;
+                              ${DOCKER_NAMESPACE}/travis-odp-lng-ubuntu_14.04.05_i386 /odp/scripts/ci/build_${CROSS_ARCH}.sh ;
                 - stage: test
                   compiler: clang
                   env: CROSS_ARCH="i386" CONF="--disable-abi-compat"
@@ -223,7 +222,7 @@ jobs:
                               -v `pwd`:/odp
                               -e CC="${CC}" -e LD="${LD}" -e CXX="${CXX}"
                               -e CONF="${CONF}"
-                              lngodp/odp_ubuntu_14.04.5_i386 /root/build_${CROSS_ARCH}.sh ;
+                              ${DOCKER_NAMESPACE}/travis-odp-lng-ubuntu_14.04.05_i386 /odp/scripts/ci/build_${CROSS_ARCH}.sh ;
                 - stage: test
                   canfail: yes
                   env: TEST=checkpatch
