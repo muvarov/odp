@@ -25,7 +25,7 @@ make -j $(nproc)
 
 # ignore possible failures there because these tests depends on measurements
 # and systems might differ in performance.
-export ci="true"
+export CI="true"
 
 ODP_SCHEDULER=basic    make check
 if [ $? -ne 0 ]; then

@@ -15,8 +15,12 @@ fi
 export PKG_CONFIG_PATH=/usr/lib/powerpc-linux-gnu/pkgconfig:/usr/powerpc-linux-gnu/pkgconfig
 export PKG_CONFIG_PATH="$HOME/cunit-install/powerpc-linux-gnu/lib/pkgconfig:${PKG_CONFIG_PATH}"
 
-cd ~
-git clone /odp
+CWD=$(dirname "$0")
+TDIR=`mktemp -d -p ~`
+
+cd ${TDIR}
+
+git clone ${CWD}/../../ odp
 cd ./odp
 ./bootstrap
 ./configure --host=powerpc-linux-gnu --build=x86_64-linux-gnu \
@@ -24,5 +28,5 @@ cd ./odp
 
 make clean
 make -j 8
-cd ..
-rm -rf odp
+cd ~ 
+rm -rf ${TDIR}

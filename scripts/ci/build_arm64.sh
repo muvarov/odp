@@ -20,10 +20,6 @@ TDIR=`mktemp -d -p ~`
 
 cd ${TDIR}
 
-git clone ${CWD}/../../ odp
-cd ./odp
-
-cd ~
 export CROSS_ARCH=arm64
 export DPDK_CROSS=aarch64-linux-gnu-
 export TARGET="arm64$DPDKCC"
