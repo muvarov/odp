@@ -129,9 +129,6 @@ typedef struct ODP_ALIGNED_CACHE {
 	dpdk_opt_t opt;
 } pkt_dpdk_t;
 
-ODP_STATIC_ASSERT(PKTIO_PRIVATE_SIZE >= sizeof(pkt_dpdk_t),
-		  "PKTIO_PRIVATE_SIZE too small");
-
 static inline pkt_dpdk_t *pkt_priv(pktio_entry_t *pktio_entry)
 {
 	return (pkt_dpdk_t *)(uintptr_t)(pktio_entry->s.pkt_priv);
@@ -1389,7 +1386,7 @@ static int dpdk_open(odp_pktio_t id ODP_UNUSED,
 		     const char *netdev,
 		     odp_pool_t pool)
 {
-	pkt_dpdk_t *pkt_dpdk = pkt_priv(pktio_entry);
+	pkt_dpdk_t *pkt_dpdk;
 	struct rte_eth_dev_info dev_info;
 	struct rte_mempool *pkt_pool;
 	char pool_name[RTE_MEMPOOL_NAMESIZE];
@@ -1403,6 +1400,10 @@ static int dpdk_open(odp_pktio_t id ODP_UNUSED,
 
 	if (pool == ODP_POOL_INVALID)
 		return -1;
+
+	pktio_adjust_priv(pktio_entry, sizeof(pkt_dpdk_t));
+
+	pkt_dpdk = pkt_priv(pktio_entry);
 	pool_entry = pool_entry_from_hdl(pool);
 
 	if (!dpdk_netdev_is_valid(netdev)) {

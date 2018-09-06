@@ -83,7 +83,7 @@ int odp_pktio_init_global(void)
 		odp_ticketlock_init(&pktio_entry->s.txl);
 		odp_spinlock_init(&pktio_entry->s.cls.l2_cos_table.lock);
 		odp_spinlock_init(&pktio_entry->s.cls.l3_cos_table.lock);
-
+		pktio_entry->s.pkt_priv_size = 0;
 		pktio_entry_ptr[i] = pktio_entry;
 	}
 
@@ -406,6 +406,12 @@ int odp_pktio_close(odp_pktio_t hdl)
 		ODP_ABORT("unable to close pktio\n");
 
 	unlock_entry(entry);
+
+	if (entry->s.pkt_priv && entry->s.pkt_priv_size) {
+		free(entry->s.pkt_priv);
+		entry->s.pkt_priv = NULL;
+		entry->s.pkt_priv_size = 0;
+	}
 
 	ODP_DBG("interface: %s\n", entry->s.name);
 

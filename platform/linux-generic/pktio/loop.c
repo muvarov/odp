@@ -37,9 +37,6 @@ typedef struct {
 	uint8_t idx;			/**< index of "loop" device */
 } pkt_loop_t;
 
-ODP_STATIC_ASSERT(PKTIO_PRIVATE_SIZE >= sizeof(pkt_loop_t),
-		  "PKTIO_PRIVATE_SIZE too small");
-
 static inline pkt_loop_t *pkt_priv(pktio_entry_t *pktio_entry)
 {
 	return (pkt_loop_t *)(uintptr_t)(pktio_entry->s.pkt_priv);
@@ -68,6 +65,8 @@ static int loopback_open(odp_pktio_t id, pktio_entry_t *pktio_entry,
 	} else {
 		return -1;
 	}
+
+	pktio_adjust_priv(pktio_entry, sizeof(pkt_loop_t));
 
 	snprintf(loopq_name, sizeof(loopq_name), "%" PRIu64 "-pktio_loopq",
 		 odp_pktio_to_u64(id));

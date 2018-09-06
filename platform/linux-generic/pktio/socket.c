@@ -61,9 +61,6 @@ typedef struct {
 	unsigned char if_mac[ETH_ALEN];	/**< IF eth mac addr */
 } pkt_sock_t;
 
-ODP_STATIC_ASSERT(PKTIO_PRIVATE_SIZE >= sizeof(pkt_sock_t),
-		  "PKTIO_PRIVATE_SIZE too small");
-
 static inline pkt_sock_t *pkt_priv(pktio_entry_t *pktio_entry)
 {
 	return (pkt_sock_t *)(uintptr_t)(pktio_entry->s.pkt_priv);
@@ -224,6 +221,8 @@ static int sock_mmsg_open(odp_pktio_t id ODP_UNUSED,
 {
 	if (disable_pktio)
 		return -1;
+
+	pktio_adjust_priv(pktio_entry, sizeof(pkt_sock_t));
 	return sock_setup_pkt(pktio_entry, devname, pool);
 }
 

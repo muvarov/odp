@@ -63,9 +63,6 @@ typedef	struct {
 					_ipc_map_remote_pool() */
 } pkt_ipc_t;
 
-ODP_STATIC_ASSERT(PKTIO_PRIVATE_SIZE >= sizeof(pkt_ipc_t),
-		  "PKTIO_PRIVATE_SIZE too small");
-
 static inline pkt_ipc_t *pkt_priv(pktio_entry_t *pktio_entry)
 {
 	return (pkt_ipc_t *)(uintptr_t)(pktio_entry->s.pkt_priv);
@@ -381,6 +378,8 @@ static int ipc_pktio_open(odp_pktio_t id ODP_UNUSED,
 	char name[ODP_POOL_NAME_LEN + sizeof("_info")];
 	char tail[ODP_POOL_NAME_LEN];
 	odp_shm_t shm;
+
+	pktio_adjust_priv(pktio_entry, sizeof(pkt_ipc_t));
 
 	ODP_STATIC_ASSERT(ODP_POOL_NAME_LEN == _RING_NAMESIZE,
 			  "mismatch pool and ring name arrays");

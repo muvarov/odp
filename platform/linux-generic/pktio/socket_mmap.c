@@ -69,9 +69,6 @@ typedef struct {
 	int fanout;
 } pkt_sock_mmap_t;
 
-ODP_STATIC_ASSERT(PKTIO_PRIVATE_SIZE >= sizeof(pkt_sock_mmap_t),
-		  "PKTIO_PRIVATE_SIZE too small");
-
 static inline pkt_sock_mmap_t *pkt_priv(pktio_entry_t *pktio_entry)
 {
 	return (pkt_sock_mmap_t *)(uintptr_t)(pktio_entry->s.pkt_priv);
@@ -589,6 +586,8 @@ static int sock_mmap_open(odp_pktio_t id ODP_UNUSED,
 
 	if (disable_pktio)
 		return -1;
+
+	pktio_adjust_priv(pktio_entry, sizeof(pkt_sock_mmap_t));
 
 	pkt_sock_mmap_t *const pkt_sock = pkt_priv(pktio_entry);
 	int fanout = 1;

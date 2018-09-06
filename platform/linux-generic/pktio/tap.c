@@ -60,9 +60,6 @@ typedef struct {
 	odp_pool_t pool;		/**< pool to alloc packets from */
 } pkt_tap_t;
 
-ODP_STATIC_ASSERT(PKTIO_PRIVATE_SIZE >= sizeof(pkt_tap_t),
-		  "PKTIO_PRIVATE_SIZE too small");
-
 static inline pkt_tap_t *pkt_priv(pktio_entry_t *pktio_entry)
 {
 	return (pkt_tap_t *)(uintptr_t)(pktio_entry->s.pkt_priv);
@@ -112,6 +109,8 @@ static int tap_pktio_open(odp_pktio_t id ODP_UNUSED,
 
 	if (strncmp(devname, "tap:", 4) != 0)
 		return -1;
+
+	pktio_adjust_priv(pktio_entry, sizeof(pkt_tap_t));
 
 	/* Init pktio entry */
 	memset(tap, 0, sizeof(*tap));

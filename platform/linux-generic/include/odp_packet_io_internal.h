@@ -51,16 +51,6 @@ extern "C" {
 /* Forward declaration */
 struct pktio_if_ops;
 
-#if defined(ODP_NETMAP)
-#define PKTIO_PRIVATE_SIZE 74752
-#elif defined(ODP_PKTIO_DPDK) && ODP_CACHE_LINE_SIZE == 128
-#define PKTIO_PRIVATE_SIZE 10240
-#elif defined(ODP_PKTIO_DPDK)
-#define PKTIO_PRIVATE_SIZE 5632
-#else
-#define PKTIO_PRIVATE_SIZE 384
-#endif
-
 struct pktio_entry {
 	const struct pktio_if_ops *ops; /**< Implementation specific methods */
 	/* These two locks together lock the whole pktio device */
@@ -69,7 +59,8 @@ struct pktio_entry {
 	uint8_t cls_enabled;            /**< classifier enabled */
 	uint8_t chksum_insert_ena;      /**< pktout checksum offload enabled */
 	odp_pktio_t handle;		/**< pktio handle */
-	unsigned char ODP_ALIGNED_CACHE pkt_priv[PKTIO_PRIVATE_SIZE];
+	unsigned char ODP_ALIGNED_CACHE *pkt_priv;
+	size_t pkt_priv_size;
 	enum {
 		/* Not allocated */
 		PKTIO_STATE_FREE = 0,
@@ -204,6 +195,15 @@ static inline int pktio_cls_enabled(pktio_entry_t *entry)
 static inline void pktio_cls_enabled_set(pktio_entry_t *entry, int ena)
 {
 	entry->s.cls_enabled = ena;
+}
+
+static inline void pktio_adjust_priv(pktio_entry_t *pktio_entry, size_t size)
+{
+	if (pktio_entry->s.pkt_priv_size >= size)
+		return;
+
+	pktio_entry->s.pkt_priv = realloc(pktio_entry->s.pkt_priv, size);
+	pktio_entry->s.pkt_priv_size = size;
 }
 
 extern const pktio_if_ops_t netmap_pktio_ops;

@@ -13,9 +13,6 @@ typedef struct {
 	int promisc;			/**< whether promiscuous mode is on */
 } pkt_null_t;
 
-ODP_STATIC_ASSERT(PKTIO_PRIVATE_SIZE >= sizeof(pkt_null_t),
-		  "PKTIO_PRIVATE_SIZE too small");
-
 static inline pkt_null_t *pkt_priv(pktio_entry_t *pktio_entry)
 {
 	return (pkt_null_t *)(uintptr_t)(pktio_entry->s.pkt_priv);
@@ -32,6 +29,8 @@ static int null_open(odp_pktio_t id ODP_UNUSED,
 {
 	if (strncmp(devname, "null:", 5) != 0)
 		return -1;
+
+	pktio_adjust_priv(pktio_entry, sizeof(pkt_null_t));
 	pkt_priv(pktio_entry)->promisc = 0;
 	return 0;
 }

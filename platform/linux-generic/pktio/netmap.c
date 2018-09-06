@@ -103,9 +103,6 @@ typedef struct {
 	netmap_opt_t opt;               /**< options */
 } pkt_netmap_t;
 
-ODP_STATIC_ASSERT(PKTIO_PRIVATE_SIZE >= sizeof(pkt_netmap_t),
-		  "PKTIO_PRIVATE_SIZE too small");
-
 static inline pkt_netmap_t *pkt_priv(pktio_entry_t *pktio_entry)
 {
 	return (pkt_netmap_t *)(uintptr_t)(pktio_entry->s.pkt_priv);
@@ -444,7 +441,7 @@ static int netmap_open(odp_pktio_t id ODP_UNUSED, pktio_entry_t *pktio_entry,
 	const char *prefix;
 	uint32_t mtu;
 	uint32_t buf_size;
-	pkt_netmap_t *pkt_nm = pkt_priv(pktio_entry);
+	pkt_netmap_t *pkt_nm;
 	struct nm_desc *desc;
 	struct netmap_ring *ring;
 	odp_pktin_hash_proto_t hash_proto;
@@ -455,6 +452,9 @@ static int netmap_open(odp_pktio_t id ODP_UNUSED, pktio_entry_t *pktio_entry,
 
 	if (pool == ODP_POOL_INVALID)
 		return -1;
+
+	pktio_adjust_priv(pktio_entry, sizeof(pkt_netmap_t));
+	pkt_nm = pkt_priv(pktio_entry);
 
 	/* Init pktio entry */
 	memset(pkt_nm, 0, sizeof(*pkt_nm));

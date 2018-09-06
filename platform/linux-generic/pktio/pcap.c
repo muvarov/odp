@@ -62,9 +62,6 @@ typedef struct {
 	odp_bool_t promisc;	/**< promiscuous mode state */
 } pkt_pcap_t;
 
-ODP_STATIC_ASSERT(PKTIO_PRIVATE_SIZE >= sizeof(pkt_pcap_t),
-		  "PKTIO_PRIVATE_SIZE too small");
-
 static inline pkt_pcap_t *pkt_priv(pktio_entry_t *pktio_entry)
 {
 	return (pkt_pcap_t *)(uintptr_t)(pktio_entry->s.pkt_priv);
@@ -160,9 +157,11 @@ static int _pcapif_init_tx(pkt_pcap_t *pcap)
 static int pcapif_init(odp_pktio_t id ODP_UNUSED, pktio_entry_t *pktio_entry,
 		       const char *devname, odp_pool_t pool)
 {
-	pkt_pcap_t *pcap = pkt_priv(pktio_entry);
+	pkt_pcap_t *pcap;
 	int ret;
 
+	pktio_adjust_priv(pktio_entry, sizeof(pkt_pcap_t));
+	pcap = pkt_priv(pktio_entry);
 	memset(pcap, 0, sizeof(pkt_pcap_t));
 	pcap->loop_cnt = 1;
 	pcap->loops = 1;
