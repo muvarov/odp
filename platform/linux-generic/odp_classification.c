@@ -11,6 +11,7 @@
 #include <odp/api/queue.h>
 #include <odp/api/debug.h>
 #include <odp_init_internal.h>
+#include <odp_shm_internal.h>
 #include <odp_debug_internal.h>
 #include <odp_packet_internal.h>
 #include <odp/api/packet_io.h>
@@ -84,9 +85,10 @@ int odp_classification_init_global(void)
 	odp_shm_t queue_grp_shm;
 	int i;
 
-	cos_shm = odp_shm_reserve("shm_odp_cos_tbl",
+	cos_shm = odp_shm_reserve("_odp_shm_odp_cos_tbl",
 				  sizeof(cos_tbl_t),
-				  sizeof(cos_t), 0);
+				  sizeof(cos_t),
+				  _ODP_SHM_NO_HP);
 
 	if (cos_shm == ODP_SHM_INVALID) {
 		ODP_ERR("shm allocation failed for shm_odp_cos_tbl");
@@ -104,9 +106,10 @@ int odp_classification_init_global(void)
 		LOCK_INIT(&cos->s.lock);
 	}
 
-	pmr_shm = odp_shm_reserve("shm_odp_pmr_tbl",
+	pmr_shm = odp_shm_reserve("_odp_shm_odp_pmr_tbl",
 				  sizeof(pmr_tbl_t),
-				  sizeof(pmr_t), 0);
+				  sizeof(pmr_t),
+				  _ODP_SHM_NO_HP);
 
 	if (pmr_shm == ODP_SHM_INVALID) {
 		ODP_ERR("shm allocation failed for shm_odp_pmr_tbl");
@@ -124,9 +127,10 @@ int odp_classification_init_global(void)
 		LOCK_INIT(&pmr->s.lock);
 	}
 
-	queue_grp_shm = odp_shm_reserve("shm_odp_cls_queue_grp_tbl",
+	queue_grp_shm = odp_shm_reserve("_odp_shm_cls_queue_grp_tbl",
 					sizeof(_cls_queue_grp_tbl_t),
-					sizeof(queue_entry_t *), 0);
+					sizeof(queue_entry_t *),
+					_ODP_SHM_NO_HP);
 
 	if (queue_grp_shm == ODP_SHM_INVALID) {
 		ODP_ERR("shm allocation failed for queue_grp_tbl");
@@ -153,19 +157,19 @@ int odp_classification_term_global(void)
 	int ret = 0;
 	int rc = 0;
 
-	ret = odp_shm_free(odp_shm_lookup("shm_odp_cos_tbl"));
+	ret = odp_shm_free(odp_shm_lookup("_odp_shm_odp_cos_tbl"));
 	if (ret < 0) {
 		ODP_ERR("shm free failed for shm_odp_cos_tbl");
 		rc = -1;
 	}
 
-	ret = odp_shm_free(odp_shm_lookup("shm_odp_pmr_tbl"));
+	ret = odp_shm_free(odp_shm_lookup("_odp_shm_odp_pmr_tbl"));
 	if (ret < 0) {
 		ODP_ERR("shm free failed for shm_odp_pmr_tbl");
 		rc = -1;
 	}
 
-	ret = odp_shm_free(odp_shm_lookup("shm_odp_cls_queue_grp_tbl"));
+	ret = odp_shm_free(odp_shm_lookup("_odp_shm_cls_queue_grp_tbl"));
 	if (ret < 0) {
 		ODP_ERR("shm free failed for shm_odp_cls_queue_grp_tbl");
 		rc = -1;
@@ -1036,7 +1040,7 @@ int cls_classify_packet(pktio_entry_t *entry, const uint8_t *base,
 	pkt_hdr->p.input_flags.dst_queue = 1;
 
 	if (!cos->s.queue_group) {
-		pkt_hdr->dst_queue = queue_fn->from_ext(cos->s.queue);
+		pkt_hdr->dst_queue = cos->s.queue;
 		return 0;
 	}
 
@@ -1045,8 +1049,7 @@ int cls_classify_packet(pktio_entry_t *entry, const uint8_t *base,
 	hash = hash & (CLS_COS_QUEUE_MAX - 1);
 	tbl_index = (cos->s.index * CLS_COS_QUEUE_MAX) + (hash %
 							  cos->s.num_queue);
-	pkt_hdr->dst_queue = queue_fn->from_ext(queue_grp_tbl->
-						s.queue[tbl_index]);
+	pkt_hdr->dst_queue = queue_grp_tbl->s.queue[tbl_index];
 	return 0;
 }
 

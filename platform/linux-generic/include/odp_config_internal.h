@@ -125,7 +125,9 @@ extern "C" {
  * defined segment length (seg_len in odp_pool_param_t) will be rounded up into
  * this value.
  */
-#define CONFIG_PACKET_SEG_LEN_MIN CONFIG_PACKET_MAX_SEG_LEN
+#define CONFIG_PACKET_SEG_LEN_MIN ((2 * 1024) - \
+				   CONFIG_PACKET_HEADROOM - \
+				   CONFIG_PACKET_TAILROOM)
 
 /* Maximum number of shared memory blocks.
  *
@@ -141,7 +143,7 @@ extern "C" {
  * all ODP threads (when the _ODP_ISHM_SINGLE_VA flag is used).
  * In bytes.
  */
-#define ODP_CONFIG_ISHM_VA_PREALLOC_SZ (536870912L)
+#define ODP_CONFIG_ISHM_VA_PREALLOC_SZ (1024 * 1024 * 1024L)
 
 /*
  * Maximum event burst size

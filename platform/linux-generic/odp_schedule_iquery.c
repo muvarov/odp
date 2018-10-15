@@ -26,6 +26,7 @@
 #include <odp_config_internal.h>
 #include <odp_timer_internal.h>
 #include <odp_queue_basic_internal.h>
+#include <odp/api/plat/queue_inlines.h>
 
 /* Number of priority levels */
 #define NUM_SCHED_PRIO 8
@@ -171,7 +172,7 @@ typedef struct {
 /* Storage for stashed enqueue operation arguments */
 typedef struct {
 	odp_buffer_hdr_t *buf_hdr[QUEUE_MULTI_MAX];
-	queue_entry_t *queue_entry;
+	odp_queue_t queue;
 	int num;
 } ordered_stash_t;
 
@@ -208,6 +209,7 @@ struct sched_thread_local {
 	 * in the same priority level.
 	 */
 	odp_rwlock_t lock;
+	int r_locked;
 	queue_index_sparse_t indexes[NUM_SCHED_PRIO];
 	sparse_bitmap_iterator_t iterators[NUM_SCHED_PRIO];
 
@@ -269,7 +271,7 @@ static int schedule_init_global(void)
 		ring_init(&queue->ring);
 
 		for (k = 0; k < PKTIO_RING_SIZE; k++)
-			queue->cmd_index[k] = RING_EMPTY;
+			queue->cmd_index[k] = -1;
 	}
 
 	for (i = 0; i < NUM_PKTIO_CMD; i++)
@@ -291,9 +293,7 @@ static int schedule_term_global(void)
 		if (sched->availables[i])
 			count = sched_queue_deq(i, events, 1, 1);
 
-		if (count < 0)
-			sched_queue_destroy_finalize(i);
-		else if (count > 0)
+		if (count > 0)
 			ODP_ERR("Queue (%d) not empty\n", i);
 	}
 
@@ -525,7 +525,14 @@ static void destroy_sched_queue(uint32_t queue_index)
 		return;
 	}
 
+	if (thread_local.r_locked)
+		odp_rwlock_read_unlock(&thread_local.lock);
+
 	__destroy_sched_queue(G, queue_index);
+
+	if (thread_local.r_locked)
+		odp_rwlock_read_lock(&thread_local.lock);
+
 	odp_rwlock_write_unlock(&G->lock);
 
 	if (sched->queues[queue_index].sync == ODP_SCHED_SYNC_ORDERED &&
@@ -613,9 +620,6 @@ static int schedule_pktio_stop(int pktio, int pktin ODP_UNUSED)
 	return remains;
 }
 
-#define DO_SCHED_LOCK() odp_rwlock_read_lock(&thread_local.lock)
-#define DO_SCHED_UNLOCK() odp_rwlock_read_unlock(&thread_local.lock)
-
 static inline bool do_schedule_prio(int prio);
 
 static inline int pop_cache_events(odp_event_t ev[], unsigned int max)
@@ -664,9 +668,8 @@ static inline void pktio_poll_input(void)
 	for (i = 0; i < PKTIO_CMD_QUEUES; i++,
 	     hash = (hash + 1) % PKTIO_CMD_QUEUES) {
 		ring = &sched->pktio_poll.queues[hash].ring;
-		index = ring_deq(ring, PKTIO_RING_MASK);
 
-		if (odp_unlikely(index == RING_EMPTY))
+		if (odp_unlikely(ring_deq(ring, PKTIO_RING_MASK, &index) == 0))
 			continue;
 
 		cmd = &sched->pktio_poll.commands[index];
@@ -719,7 +722,9 @@ static int do_schedule(odp_queue_t *out_queue,
 	if (odp_unlikely(thread_local.pause))
 		return count;
 
-	DO_SCHED_LOCK();
+	odp_rwlock_read_lock(&thread_local.lock);
+	thread_local.r_locked = 1;
+
 	/* Schedule events */
 	for (prio = 0; prio < NUM_SCHED_PRIO; prio++) {
 		/* Round robin iterate the interested queue
@@ -731,11 +736,14 @@ static int do_schedule(odp_queue_t *out_queue,
 
 		count = pop_cache_events(out_ev, max_num);
 		assign_queue_handle(out_queue);
-		DO_SCHED_UNLOCK();
+
+		odp_rwlock_read_unlock(&thread_local.lock);
+		thread_local.r_locked = 0;
 		return count;
 	}
 
-	DO_SCHED_UNLOCK();
+	odp_rwlock_read_unlock(&thread_local.lock);
+	thread_local.r_locked = 0;
 
 	/* Poll packet input when there are no events */
 	pktio_poll_input();
@@ -1132,15 +1140,16 @@ static inline void ordered_stash_release(void)
 	int i;
 
 	for (i = 0; i < thread_local.ordered.stash_num; i++) {
-		queue_entry_t *queue_entry;
+		odp_queue_t queue;
 		odp_buffer_hdr_t **buf_hdr;
 		int num, num_enq;
 
-		queue_entry = thread_local.ordered.stash[i].queue_entry;
+		queue = thread_local.ordered.stash[i].queue;
 		buf_hdr = thread_local.ordered.stash[i].buf_hdr;
 		num = thread_local.ordered.stash[i].num;
 
-		num_enq = queue_fn->enq_multi(queue_entry, buf_hdr, num);
+		num_enq = odp_queue_enq_multi(queue,
+					      (odp_event_t *)buf_hdr, num);
 
 		if (odp_unlikely(num_enq < num)) {
 			if (odp_unlikely(num_enq < 0))
@@ -1200,12 +1209,12 @@ static inline void schedule_release_context(void)
 		schedule_release_atomic();
 }
 
-static int schedule_ord_enq_multi(void *q_int, void *buf_hdr[],
+static int schedule_ord_enq_multi(odp_queue_t dst_queue, void *buf_hdr[],
 				  int num, int *ret)
 {
 	int i;
 	uint32_t stash_num = thread_local.ordered.stash_num;
-	queue_entry_t *dst_queue = q_int;
+	queue_entry_t *dst_qentry = qentry_from_handle(dst_queue);
 	uint32_t src_queue = thread_local.ordered.src_queue;
 
 	if ((src_queue == NULL_INDEX) || thread_local.ordered.in_order)
@@ -1219,7 +1228,7 @@ static int schedule_ord_enq_multi(void *q_int, void *buf_hdr[],
 	}
 
 	/* Pktout may drop packets, so the operation cannot be stashed. */
-	if (dst_queue->s.pktout.pktio != ODP_PKTIO_INVALID ||
+	if (dst_qentry->s.pktout.pktio != ODP_PKTIO_INVALID ||
 	    odp_unlikely(stash_num >=  MAX_ORDERED_STASH)) {
 		/* If the local stash is full, wait until it is our turn and
 		 * then release the stash and do enqueue directly. */
@@ -1231,7 +1240,7 @@ static int schedule_ord_enq_multi(void *q_int, void *buf_hdr[],
 		return 0;
 	}
 
-	thread_local.ordered.stash[stash_num].queue_entry = dst_queue;
+	thread_local.ordered.stash[stash_num].queue = dst_queue;
 	thread_local.ordered.stash[stash_num].num = num;
 	for (i = 0; i < num; i++)
 		thread_local.ordered.stash[stash_num].buf_hdr[i] = buf_hdr[i];
@@ -1534,14 +1543,7 @@ static inline int consume_queue(int prio, unsigned int queue_index)
 
 	count = sched_queue_deq(queue_index, cache->stash, max, 1);
 
-	if (count < 0) {
-		DO_SCHED_UNLOCK();
-		sched_queue_destroy_finalize(queue_index);
-		DO_SCHED_LOCK();
-		return 0;
-	}
-
-	if (count == 0)
+	if (count <= 0)
 		return 0;
 
 	cache->top = &cache->stash[0];

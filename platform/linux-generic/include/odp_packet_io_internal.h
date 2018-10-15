@@ -53,6 +53,8 @@ struct pktio_if_ops;
 
 #if defined(ODP_NETMAP)
 #define PKTIO_PRIVATE_SIZE 74752
+#elif defined(ODP_PKTIO_DPDK) && ODP_CACHE_LINE_SIZE == 128
+#define PKTIO_PRIVATE_SIZE 10240
 #elif defined(ODP_PKTIO_DPDK)
 #define PKTIO_PRIVATE_SIZE 5632
 #else
@@ -105,7 +107,6 @@ struct pktio_entry {
 
 	struct {
 		odp_queue_t        queue;
-		void              *queue_int;
 		odp_pktin_queue_t  pktin;
 	} in_queue[PKTIO_MAX_QUEUES];
 
