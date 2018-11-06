@@ -21,6 +21,7 @@
 #include <odp_ring_internal.h>
 #include <odp_shm_internal.h>
 #include <odp_global_data.h>
+#include <odp_libconfig_internal.h>
 
 #include <string.h>
 #include <stdio.h>
@@ -32,8 +33,9 @@
 #define UNLOCK(a)    odp_ticketlock_unlock(a)
 #define LOCK_INIT(a) odp_ticketlock_init(a)
 
-#define CACHE_BURST    32
-#define RING_SIZE_MIN  (2 * CACHE_BURST)
+#define CACHE_BURST       32
+#define RING_SIZE_MIN     (2 * CACHE_BURST)
+#define POOL_MAX_NUM_MIN  RING_SIZE_MIN
 
 /* Make sure packet buffers don't cross huge page boundaries starting from this
  * page size. 2MB is typically the smallest used huge page size. */
@@ -82,6 +84,32 @@ static inline pool_t *pool_from_buf(odp_buffer_t buf)
 	return buf_hdr->pool_ptr;
 }
 
+static int read_config_file(pool_table_t *pool_tbl)
+{
+	const char *str;
+	int val = 0;
+
+	ODP_PRINT("Pool config:\n");
+
+	str = "pool.pkt.max_num";
+	if (!_odp_libconfig_lookup_int(str, &val)) {
+		ODP_ERR("Config option '%s' not found.\n", str);
+		return -1;
+	}
+
+	if (val > CONFIG_POOL_MAX_NUM || val < POOL_MAX_NUM_MIN) {
+		ODP_ERR("Bad value %s = %u\n", str, val);
+		return -1;
+	}
+
+	pool_tbl->config.pkt_max_num = val;
+	ODP_PRINT("  %s: %i\n", str, val);
+
+	ODP_PRINT("\n");
+
+	return 0;
+}
+
 int odp_pool_init_global(void)
 {
 	uint32_t i;
@@ -99,6 +127,11 @@ int odp_pool_init_global(void)
 
 	memset(pool_tbl, 0, sizeof(pool_table_t));
 	pool_tbl->shm = shm;
+
+	if (read_config_file(pool_tbl)) {
+		odp_shm_free(shm);
+		return -1;
+	}
 
 	for (i = 0; i < ODP_CONFIG_POOLS; i++) {
 		pool_t *pool = pool_entry(i);
@@ -531,43 +564,60 @@ static int check_params(odp_pool_param_t *params)
 	switch (params->type) {
 	case ODP_POOL_BUFFER:
 		if (params->buf.num > capa.buf.max_num) {
-			ODP_DBG("buf.num too large %u\n", params->buf.num);
+			ODP_ERR("buf.num too large %u\n", params->buf.num);
 			return -1;
 		}
 
 		if (params->buf.size > capa.buf.max_size) {
-			ODP_DBG("buf.size too large %u\n", params->buf.size);
+			ODP_ERR("buf.size too large %u\n", params->buf.size);
 			return -1;
 		}
 
 		if (params->buf.align > capa.buf.max_align) {
-			ODP_DBG("buf.align too large %u\n", params->buf.align);
+			ODP_ERR("buf.align too large %u\n", params->buf.align);
 			return -1;
 		}
 
 		break;
 
 	case ODP_POOL_PACKET:
+		if (params->pkt.num > capa.pkt.max_num) {
+			ODP_ERR("pkt.num too large %u\n", params->pkt.num);
+			return -1;
+		}
+
+		if (params->pkt.max_num > capa.pkt.max_num) {
+			ODP_ERR("pkt.max_num too large %u\n",
+				params->pkt.max_num);
+			return -1;
+		}
+
 		if (params->pkt.len > capa.pkt.max_len) {
-			ODP_DBG("pkt.len too large %u\n", params->pkt.len);
+			ODP_ERR("pkt.len too large %u\n", params->pkt.len);
 			return -1;
 		}
 
 		if (params->pkt.max_len > capa.pkt.max_len) {
-			ODP_DBG("pkt.max_len too large %u\n",
+			ODP_ERR("pkt.max_len too large %u\n",
 				params->pkt.max_len);
 			return -1;
 		}
 
 		if (params->pkt.seg_len > capa.pkt.max_seg_len) {
-			ODP_DBG("pkt.seg_len too large %u\n",
+			ODP_ERR("pkt.seg_len too large %u\n",
 				params->pkt.seg_len);
 			return -1;
 		}
 
 		if (params->pkt.uarea_size > capa.pkt.max_uarea_size) {
-			ODP_DBG("pkt.uarea_size too large %u\n",
+			ODP_ERR("pkt.uarea_size too large %u\n",
 				params->pkt.uarea_size);
+			return -1;
+		}
+
+		if (params->pkt.headroom > capa.pkt.max_headroom) {
+			ODP_ERR("pkt.headroom too large %u\n",
+				params->pkt.headroom);
 			return -1;
 		}
 
@@ -575,13 +625,13 @@ static int check_params(odp_pool_param_t *params)
 
 	case ODP_POOL_TIMEOUT:
 		if (params->tmo.num > capa.tmo.max_num) {
-			ODP_DBG("tmo.num too large %u\n", params->tmo.num);
+			ODP_ERR("tmo.num too large %u\n", params->tmo.num);
 			return -1;
 		}
 		break;
 
 	default:
-		ODP_DBG("bad pool type %i\n", params->type);
+		ODP_ERR("bad pool type %i\n", params->type);
 		return -1;
 	}
 
@@ -909,7 +959,7 @@ int odp_pool_capability(odp_pool_capability_t *capa)
 	/* Packet pools */
 	capa->pkt.max_pools        = ODP_CONFIG_POOLS;
 	capa->pkt.max_len          = CONFIG_PACKET_MAX_LEN;
-	capa->pkt.max_num	   = CONFIG_POOL_MAX_NUM;
+	capa->pkt.max_num	   = pool_tbl->config.pkt_max_num;
 	capa->pkt.min_headroom     = CONFIG_PACKET_HEADROOM;
 	capa->pkt.max_headroom     = CONFIG_PACKET_HEADROOM;
 	capa->pkt.min_tailroom     = CONFIG_PACKET_TAILROOM;

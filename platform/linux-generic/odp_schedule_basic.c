@@ -58,10 +58,12 @@ ODP_STATIC_ASSERT((ODP_SCHED_PRIO_NORMAL > 0) &&
 
 /* A thread polls a non preferred sched queue every this many polls
  * of the prefer queue. */
-#define PREFER_RATIO 64
+#define MAX_PREFER_WEIGHT 127
+#define MIN_PREFER_WEIGHT 1
+#define MAX_PREFER_RATIO  (MAX_PREFER_WEIGHT + 1)
 
 /* Spread weight table */
-#define SPREAD_TBL_SIZE ((MAX_SPREAD - 1) * PREFER_RATIO)
+#define SPREAD_TBL_SIZE ((MAX_SPREAD - 1) * MAX_PREFER_RATIO)
 
 /* Maximum number of packet IO interfaces */
 #define NUM_PKTIO ODP_CONFIG_PKTIO_ENTRIES
@@ -188,6 +190,7 @@ typedef struct {
 		uint8_t burst_default[NUM_PRIO];
 		uint8_t burst_max[NUM_PRIO];
 		uint8_t num_spread;
+		uint8_t prefer_ratio;
 	} config;
 
 	uint16_t         max_spread;
@@ -229,6 +232,9 @@ typedef struct {
 
 	order_context_t order[ODP_CONFIG_QUEUES];
 
+	/* Scheduler interface config options (not used in fast path) */
+	schedule_config_t config_if;
+
 } sched_global_t;
 
 /* Check that queue[] variables are large enough */
@@ -262,11 +268,27 @@ static int read_config_file(sched_global_t *sched)
 	}
 
 	if (val > MAX_SPREAD || val < MIN_SPREAD) {
-		ODP_ERR("Bad value %s = %u\n", str, val);
+		ODP_ERR("Bad value %s = %u [min: %u, max: %u]\n", str, val,
+			MIN_SPREAD, MAX_SPREAD);
 		return -1;
 	}
 
 	sched->config.num_spread = val;
+	ODP_PRINT("  %s: %i\n", str, val);
+
+	str = "sched_basic.prio_spread_weight";
+	if (!_odp_libconfig_lookup_int(str, &val)) {
+		ODP_ERR("Config option '%s' not found.\n", str);
+		return -1;
+	}
+
+	if (val > MAX_PREFER_WEIGHT || val < MIN_PREFER_WEIGHT) {
+		ODP_ERR("Bad value %s = %u [min: %u, max: %u]\n", str, val,
+			MIN_PREFER_WEIGHT, MAX_PREFER_WEIGHT);
+		return -1;
+	}
+
+	sched->config.prefer_ratio = val + 1;
 	ODP_PRINT("  %s: %i\n", str, val);
 
 	str = "sched_basic.burst_size_default";
@@ -307,7 +329,37 @@ static int read_config_file(sched_global_t *sched)
 			return -1;
 		}
 	}
-	ODP_PRINT("\n\n");
+
+	ODP_PRINT("\n");
+
+	str = "sched_basic.group_enable.all";
+	if (!_odp_libconfig_lookup_int(str, &val)) {
+		ODP_ERR("Config option '%s' not found.\n", str);
+		return -1;
+	}
+
+	sched->config_if.group_enable.all = val;
+	ODP_PRINT("  %s: %i\n", str, val);
+
+	str = "sched_basic.group_enable.worker";
+	if (!_odp_libconfig_lookup_int(str, &val)) {
+		ODP_ERR("Config option '%s' not found.\n", str);
+		return -1;
+	}
+
+	sched->config_if.group_enable.worker = val;
+	ODP_PRINT("  %s: %i\n", str, val);
+
+	str = "sched_basic.group_enable.control";
+	if (!_odp_libconfig_lookup_int(str, &val)) {
+		ODP_ERR("Config option '%s' not found.\n", str);
+		return -1;
+	}
+
+	sched->config_if.group_enable.control = val;
+	ODP_PRINT("  %s: %i\n", str, val);
+
+	ODP_PRINT("\n");
 
 	return 0;
 }
@@ -320,7 +372,7 @@ static inline uint8_t prio_spread_index(uint32_t index)
 static void sched_local_init(void)
 {
 	int i;
-	uint8_t spread;
+	uint8_t spread, prefer_ratio;
 	uint8_t num_spread = sched->config.num_spread;
 	uint8_t offset = 1;
 
@@ -333,11 +385,12 @@ static void sched_local_init(void)
 	sched_local.ordered.src_queue = NULL_INDEX;
 
 	spread = prio_spread_index(sched_local.thr);
+	prefer_ratio = sched->config.prefer_ratio;
 
 	for (i = 0; i < SPREAD_TBL_SIZE; i++) {
 		sched_local.spread_tbl[i] = spread;
 
-		if (num_spread > 1 && (i % PREFER_RATIO) == 0) {
+		if (num_spread > 1 && (i % prefer_ratio) == 0) {
 			sched_local.spread_tbl[i] = prio_spread_index(spread +
 								      offset);
 			offset++;
@@ -351,6 +404,7 @@ static int schedule_init_global(void)
 {
 	odp_shm_t shm;
 	int i, j, grp;
+	int prefer_ratio;
 
 	ODP_DBG("Schedule init ... ");
 
@@ -371,8 +425,10 @@ static int schedule_init_global(void)
 		return -1;
 	}
 
+	prefer_ratio = sched->config.prefer_ratio;
+
 	/* When num_spread == 1, only spread_tbl[0] is used. */
-	sched->max_spread = (sched->config.num_spread - 1) * PREFER_RATIO;
+	sched->max_spread = (sched->config.num_spread - 1) * prefer_ratio;
 	sched->shm  = shm;
 	odp_spinlock_init(&sched->mask_lock);
 
@@ -1467,6 +1523,11 @@ static int schedule_num_grps(void)
 	return NUM_SCHED_GRPS;
 }
 
+static void schedule_config(schedule_config_t *config)
+{
+	*config = *(&sched->config_if);
+}
+
 /* Fill in scheduler interface */
 const schedule_fn_t schedule_basic_fn = {
 	.pktio_start = schedule_pktio_start,
@@ -1483,7 +1544,8 @@ const schedule_fn_t schedule_basic_fn = {
 	.term_local  = schedule_term_local,
 	.order_lock = order_lock,
 	.order_unlock = order_unlock,
-	.max_ordered_locks = schedule_max_ordered_locks
+	.max_ordered_locks = schedule_max_ordered_locks,
+	.config = schedule_config
 };
 
 /* Fill in scheduler API calls */

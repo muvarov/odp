@@ -24,9 +24,11 @@
 #include <odp_pool_internal.h>
 #include <odp_queue_scalable_internal.h>
 #include <odp_schedule_if.h>
+#include <odp_timer_internal.h>
 #include <odp_ishm_internal.h>
 #include <odp_ishmpool_internal.h>
 #include <odp/api/plat/queue_inline_types.h>
+#include <odp_global_data.h>
 
 #include <string.h>
 #include <inttypes.h>
@@ -110,7 +112,7 @@ static int queue_init(queue_entry_t *queue, const char *name,
 
 	sched_elem = &queue->s.sched_elem;
 	ring_size = param->size > 0 ?
-		ROUNDUP_POWER2_U32(param->size) : CONFIG_QUEUE_SIZE;
+		ROUNDUP_POWER2_U32(param->size) : CONFIG_SCAL_QUEUE_SIZE;
 	strncpy(queue->s.name, name ? name : "", ODP_QUEUE_NAME_LEN - 1);
 	queue->s.name[ODP_QUEUE_NAME_LEN - 1] = 0;
 	memcpy(&queue->s.param, param, sizeof(odp_queue_param_t));
@@ -124,6 +126,8 @@ static int queue_init(queue_entry_t *queue, const char *name,
 		ring[ring_idx] = NULL;
 
 	queue->s.type = queue->s.param.type;
+	odp_atomic_init_u64(&queue->s.num_timers, 0);
+
 	queue->s.enqueue = _queue_enq;
 	queue->s.dequeue = _queue_deq;
 	queue->s.enqueue_multi = _queue_enq_multi;
@@ -212,15 +216,16 @@ static int queue_init_global(void)
 		/* Add size of the array holding the queues */
 		pool_size = sizeof(queue_table_t);
 		/* Add storage required for queues */
-		pool_size += (CONFIG_QUEUE_SIZE * sizeof(odp_buffer_hdr_t *)) *
-			     ODP_CONFIG_QUEUES;
+		pool_size += (CONFIG_SCAL_QUEUE_SIZE *
+			      sizeof(odp_buffer_hdr_t *)) * ODP_CONFIG_QUEUES;
+
 		/* Add the reorder window size */
 		pool_size += sizeof(reorder_window_t) * ODP_CONFIG_QUEUES;
 		/* Choose min_alloc and max_alloc such that buddy allocator is
 		 * is selected.
 		 */
 		min_alloc = 0;
-		max_alloc = CONFIG_QUEUE_SIZE * sizeof(odp_buffer_hdr_t *);
+		max_alloc = CONFIG_SCAL_QUEUE_SIZE * sizeof(odp_buffer_hdr_t *);
 		queue_shm_pool = _odp_ishm_pool_create("queue_shm_pool",
 						       pool_size,
 						       min_alloc, max_alloc,
@@ -842,6 +847,11 @@ static int queue_deq_multi(odp_queue_t handle, odp_event_t ev[], int num)
 		num = QUEUE_MULTI_MAX;
 
 	queue = qentry_from_ext(handle);
+
+	if (odp_global_rw->inline_timers &&
+	    odp_atomic_load_u64(&queue->s.num_timers))
+		timer_run();
+
 	return queue->s.dequeue_multi(handle, (odp_buffer_hdr_t **)ev, num);
 }
 
@@ -850,6 +860,11 @@ static odp_event_t queue_deq(odp_queue_t handle)
 	queue_entry_t *queue;
 
 	queue = qentry_from_ext(handle);
+
+	if (odp_global_rw->inline_timers &&
+	    odp_atomic_load_u64(&queue->s.num_timers))
+		timer_run();
+
 	return (odp_event_t)queue->s.dequeue(handle);
 }
 
@@ -957,6 +972,20 @@ static int queue_orig_multi(odp_queue_t handle,
 							     buf_hdr, num);
 }
 
+static void queue_timer_add(odp_queue_t handle)
+{
+	queue_entry_t *queue = qentry_from_ext(handle);
+
+	odp_atomic_inc_u64(&queue->s.num_timers);
+}
+
+static void queue_timer_rem(odp_queue_t handle)
+{
+	queue_entry_t *queue = qentry_from_ext(handle);
+
+	odp_atomic_dec_u64(&queue->s.num_timers);
+}
+
 /* API functions */
 _odp_queue_api_fn_t queue_scalable_api = {
 	.queue_create = queue_create,
@@ -989,5 +1018,7 @@ queue_fn_t queue_scalable_fn = {
 	.get_pktin = queue_get_pktin,
 	.set_pktin = queue_set_pktin,
 	.set_enq_deq_fn = queue_set_enq_deq_func,
-	.orig_deq_multi = queue_orig_multi
+	.orig_deq_multi = queue_orig_multi,
+	.timer_add = queue_timer_add,
+	.timer_rem = queue_timer_rem
 };

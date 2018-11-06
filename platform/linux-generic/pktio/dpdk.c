@@ -325,6 +325,22 @@ static struct rte_mempool *mbuf_pool_create(const char *name,
 	mbp_priv.mbuf_data_room_size = data_room_size;
 	mbp_priv.mbuf_priv_size = 0;
 
+	if (pool_entry->seg_len < RTE_MBUF_DEFAULT_BUF_SIZE) {
+		ODP_ERR("Some NICs need at least %dB buffers to not segment "
+			 "standard ethernet frames. Increase pool seg_len.\n",
+			 RTE_MBUF_DEFAULT_BUF_SIZE);
+		goto fail;
+	}
+
+	total_size = rte_mempool_calc_obj_size(elt_size, MEMPOOL_F_NO_SPREAD,
+					       &sz);
+	if (total_size != pool_entry->block_size) {
+		ODP_ERR("DPDK pool block size not matching to ODP pool: "
+			"%" PRIu32 "/%" PRIu32 "\n", total_size,
+			pool_entry->block_size);
+		goto fail;
+	}
+
 	mp = rte_mempool_create_empty(name, num, elt_size, cache_size(num),
 				      sizeof(struct rte_pktmbuf_pool_private),
 				      rte_socket_id(), 0);

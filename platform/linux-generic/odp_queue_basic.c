@@ -16,6 +16,7 @@
 #include <odp_pool_internal.h>
 #include <odp_init_internal.h>
 #include <odp_shm_internal.h>
+#include <odp_timer_internal.h>
 #include <odp/api/shared_memory.h>
 #include <odp/api/schedule.h>
 #include <odp_schedule_if.h>
@@ -28,6 +29,7 @@
 #include <odp/api/traffic_mngr.h>
 #include <odp_libconfig_internal.h>
 #include <odp/api/plat/queue_inline_types.h>
+#include <odp_global_data.h>
 
 #define NUM_INTERNAL_QUEUES 64
 
@@ -806,6 +808,7 @@ static int queue_init(queue_entry_t *queue, const char *name,
 		queue->s.param.deq_mode = ODP_QUEUE_OP_DISABLED;
 
 	queue->s.type = queue_type;
+	odp_atomic_init_u64(&queue->s.num_timers, 0);
 
 	queue->s.pktin = PKTIN_INVALID;
 	queue->s.pktout = PKTOUT_INVALID;
@@ -949,6 +952,20 @@ static int queue_api_enq_multi(odp_queue_t handle,
 				      (odp_buffer_hdr_t **)(uintptr_t)ev, num);
 }
 
+static void queue_timer_add(odp_queue_t handle)
+{
+	queue_entry_t *queue = qentry_from_handle(handle);
+
+	odp_atomic_inc_u64(&queue->s.num_timers);
+}
+
+static void queue_timer_rem(odp_queue_t handle)
+{
+	queue_entry_t *queue = qentry_from_handle(handle);
+
+	odp_atomic_dec_u64(&queue->s.num_timers);
+}
+
 static int queue_api_enq(odp_queue_t handle, odp_event_t ev)
 {
 	queue_entry_t *queue = qentry_from_handle(handle);
@@ -961,6 +978,10 @@ static int queue_api_deq_multi(odp_queue_t handle, odp_event_t ev[], int num)
 {
 	queue_entry_t *queue = qentry_from_handle(handle);
 
+	if (odp_global_rw->inline_timers &&
+	    odp_atomic_load_u64(&queue->s.num_timers))
+		timer_run();
+
 	if (num > QUEUE_MULTI_MAX)
 		num = QUEUE_MULTI_MAX;
 
@@ -971,6 +992,10 @@ static int queue_api_deq_multi(odp_queue_t handle, odp_event_t ev[], int num)
 static odp_event_t queue_api_deq(odp_queue_t handle)
 {
 	queue_entry_t *queue = qentry_from_handle(handle);
+
+	if (odp_global_rw->inline_timers &&
+	    odp_atomic_load_u64(&queue->s.num_timers))
+		timer_run();
 
 	return (odp_event_t)queue->s.dequeue(handle);
 }
@@ -1007,5 +1032,7 @@ queue_fn_t queue_basic_fn = {
 	.get_pktin = queue_get_pktin,
 	.set_pktin = queue_set_pktin,
 	.set_enq_deq_fn = queue_set_enq_deq_func,
-	.orig_deq_multi = queue_orig_multi
+	.orig_deq_multi = queue_orig_multi,
+	.timer_add = queue_timer_add,
+	.timer_rem = queue_timer_rem
 };

@@ -27,13 +27,6 @@ extern "C" {
 #define ODP_CONFIG_QUEUES 1024
 
 /*
- * Maximum queue depth. Maximum number of elements that can be stored in a
- * queue. This value is used only when the size is not explicitly provided
- * during queue creation.
- */
-#define CONFIG_QUEUE_SIZE 4096
-
-/*
  * Maximum number of ordered locks per queue
  */
 #define CONFIG_QUEUE_MAX_ORD_LOCKS 2
@@ -125,8 +118,8 @@ extern "C" {
  * defined segment length (seg_len in odp_pool_param_t) will be rounded up into
  * this value.
  */
-#define CONFIG_PACKET_SEG_LEN_MIN ((2 * 1024) - \
-				   CONFIG_PACKET_HEADROOM - \
+#define CONFIG_PACKET_SEG_LEN_MIN ((2 * 1024) + \
+				   CONFIG_PACKET_HEADROOM + \
 				   CONFIG_PACKET_TAILROOM)
 
 /* Maximum number of shared memory blocks.
@@ -156,7 +149,7 @@ extern "C" {
 /*
  * Maximum number of events in a pool
  */
-#define CONFIG_POOL_MAX_NUM (1 * 1024 * 1024)
+#define CONFIG_POOL_MAX_NUM ((1024 * 1024) - 1)
 
 /*
  * Maximum number of events in a thread local pool cache
